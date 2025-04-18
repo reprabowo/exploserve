@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+{% block title %}{{ action }} Study Program{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1>{{ action }} Study Program</h1>
+    <form method="post">
+        {% csrf_token %}
+        <div class="mb-3">
+          {{ form.institution.label_tag }}
+          {{ form.institution|attr:"disabled:disabled"|add_class:"form-control" }}
+          <input type="hidden" name="{{ form.institution.html_name }}" value="{{ form.institution.value|default_if_none:'' }}">
+          {{ form.institution.errors }}
+        </div>
+        {% for field in form %}
+          <div class="mb-3">
+            {% if field.name != 'institution' %}
+              {{ field.label_tag }}
+              {{ field|add_class:"form-control" }}
+              {{ field.errors }}
+            {% endif %}
+          </div>
+        {% endfor %}
+        <button type="submit" class="btn btn-success">{{ action }}</button>
+    </form>
+    <a href="{% url 'programstudi_list' %}" class="btn btn-secondary mt-3">Back to Study Programs</a>
+</div>
+{% endblock %}

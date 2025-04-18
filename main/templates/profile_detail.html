@@ -1,0 +1,205 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Profile Detail{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* Optional: Make card headings stand out a bit */
+  .card-header {
+    font-weight: bold;
+  }
+  a {
+      text-decoration: none !important;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+{% if user.is_authenticated %}
+  {% if user.profile.role == "system_owner" or user.profile.role == "system_admin" or user.profile.role == "institution_admin" %}
+    <div class="container mt-5">
+  {% else %}
+    <div class="container mt-5 pt-5">
+  {% endif %}
+{% else %}
+  <div class="container mt-5 pt-5">
+{% endif %}
+
+  <!-- Row 1: H1 Heading -->
+  <div class="row">
+    <div class="col-12">
+      <h1>
+        {% if profile_obj.gelar_depan %}
+          {{ profile_obj.gelar_depan }}
+        {% endif %}
+        {% if profile_obj.nama_lengkap %}
+          {{ profile_obj.nama_lengkap }},
+        {% else %}
+          Profil
+        {% endif %}
+        {% if profile_obj.gelar_belakang %}
+          {{ profile_obj.gelar_belakang }}
+        {% endif %}
+      </h1>
+    </div>
+  </div>
+
+  <!-- Row 2: Institution & Study Program (1 column) -->
+  <div class="row mt-3">
+    <div class="col-12">
+      <h4>
+        {% if profile_obj.program_studi %}
+          {{ profile_obj.program_studi }}
+        {% endif %}
+      </h4>
+    </div>
+  </div>
+
+  <!-- Row 3: 3-Column Cards -->
+  <div class="row mt-3">
+    <!-- Card 1 -->
+    <div class="col-12 col-md-6 col-lg-2 mb-4">
+      <div class="card h-100">
+        {% if profile_obj.profile_photo %}
+        <img
+        src="{{ profile_obj.profile_photo.url }}"
+        alt="{{ profile_obj.nama_lengkap }} Photo"
+        class="card-img-top img-fluid"> 
+        {% else %}
+        <img
+        src="https://www.shutterstock.com/image-vector/avatar-gender-neutral-silhouette-vector-600nw-2470054311.jpg"
+        alt="No Photo"
+        class="card-img-top img-fluid">
+        {% endif %}
+        {% if profile_obj.institution and profile_obj.institution.logo %}
+        <img
+          src="{{ profile_obj.institution.logo.url }}"
+          alt="Institution Logo"
+          class="position-absolute"
+          style="top: 10px; right: 10px; width: 25%; height: auto;">
+        {% endif %}
+
+        <div class="card-body text-center">
+          <p>{% if profile_obj.nidn_nidk %}{% if profile_obj.is_reviewer_assigned %}Peneliti<br>Reviewer{% else %}Peneliti{% endif %}{% else %}Staf{% endif %}</p>
+          {% if profile_obj.nidn_nidk %}{% if profile_obj.sinta_id %}
+          <span class="text-body-tertiary"><small>SINTA Scores</small></span><br>
+          <div class="row gx-0">
+            <div class="col-6">
+              <span class="text-body-tertiary"><small>Overall</small></span>
+              <span class="btn btn-info w-100 me-1">{{ profile_obj.sinta_score }}</span>
+            </div>
+            <div class="col-6">
+              <span class="text-body-tertiary"><small>3 Years</small></span>
+              <span class="btn btn-info w-100 ms-1">{{ profile_obj.sinta_score3 }}</span>
+            </div>
+          </div>
+          <div class="row gx-0 mb-2">
+            <div class="col-6">
+              <span class="text-body-tertiary"><small>Scopus</small></span>
+              <span class="btn btn-warning w-100 me-1">{{ profile_obj.sinta_scoresc }}</span>
+            </div>
+            <div class="col-6">
+              <span class="text-body-tertiary"><small>Google</small></span>
+              <span class="btn btn-primary w-100 ms-1">{{ profile_obj.sinta_scorego }}</span>
+            </div>
+          </div>
+          <!-- A hidden form -->
+          <form id="sync-sinta-form" action="{% url 'fetch_sinta_data' sinta_id=profile_obj.sinta_id %}" method="post" style="display: none;">
+            {% csrf_token %}
+          </form>
+          <!-- A text link that triggers the form submission -->
+          <p>
+            <span class="badge bg-light"><a href="#" class="text-body-tertiary" style="text-decoration: none; color: white; font-weight: normal; " onclick="event.preventDefault(); document.getElementById('sync-sinta-form').submit();">Sync. Data</a></span>
+          </p>
+          {% endif %}{% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Card 2 -->
+    <div class="col-12 col-md-6 col-lg-5 mb-4">
+      <div class="card h-100 bg-light mb-3">
+        <div class="card-body">
+          <p><strong>Nama Lengkap:</strong><br>{{ profile_obj.nama_lengkap }}</p>
+          {% if profile_obj.nidn_nidk %}
+            <p><strong>NIDN/NIDK:</strong><br>{{ profile_obj.nidn_nidk }}</p>
+          {% endif %}
+          {% if profile_obj.institution %}
+            <p><strong>Klaster PT:</strong><br>{{ profile_obj.institution.get_klaster_pt_display }}</p>
+          {% else %}{% endif %}
+          {% if profile_obj.institution %}
+            <p><strong>Institusi:</strong><br><a href="{% url 'institution_profile' profile_obj.institution.id %}">{{ profile_obj.institution.name }}</a></p>
+          {% else %}{% endif %}
+          {% if profile_obj.program_studi %}
+            <p><strong>Program Studi:</strong><br><a href="{% url 'programstudi_detail' profile_obj.program_studi.id %}">{{ profile_obj.program_studi }}</a></p>
+          {% else %}{% endif %}
+          {% if profile_obj.jenjang_pendidikan %}
+            <p><strong>Jenjang Pendidikan:</strong><br>{{ profile_obj.jenjang_pendidikan }}</p>
+          {% endif %}
+          {% if profile_obj.jabatan_akademik %}
+            <p><strong>Jabatan Akademik:</strong><br>{{ profile_obj.jabatan_akademik }}</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Card 3 -->
+    <div class="col-12 col-md-6 col-lg-5 mb-4">
+      <div class="card h-100">
+        <div class="card-body">
+          {% if profile_obj.user.email %}
+            <p><strong>Email:</strong><br>{{ profile_obj.user.email }}</p>
+          {% endif %}
+          {% if profile_obj.no_hp %}
+            {% load phone_filters %}
+            <p><strong>No HP:</strong><br>
+              <a href="{{ profile_obj.no_hp|whatsapp_link }}" target="_blank"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-whatsapp" viewBox="0 0 16 16">
+                <path d="M13.601 2.326A7.85 7.85 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.9 7.9 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.9 7.9 0 0 0 13.6 2.326zM7.994 14.521a6.6 6.6 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.56 6.56 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592m3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.73.73 0 0 0-.529.247c-.182.198-.691.677-.691 1.654s.71 1.916.81 2.049c.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232"/>
+              </svg> {{ profile_obj.no_hp }}</a>
+            </p>
+          {% endif %}
+          {% if profile_obj.research_interest %}
+            <p><strong>Research Interest:</strong><br>{{ profile_obj.research_interest }}</p>
+          {% endif %}
+          {% if profile_obj.sinta_id %}
+            <p>
+              <strong>SINTA ID:</strong><br>
+              {% if profile_obj.sinta_id %}
+                  <a href="https://sinta.kemdikbud.go.id/authors/profile/{{ profile_obj.sinta_id }}" target="_blank" >{{ profile_obj.sinta_id }}</a>
+              {% endif %}
+            </p>
+          {% endif %}
+          {% if profile_obj.orcid_id %}
+            <p>
+            <strong>Orcid ID:</strong><br>
+            {% if profile_obj.sinta_id %}
+            <a href="{{ profile_obj.orcid_id }}" target="_blank">
+                  {{ profile_obj.orcid_id }}
+            </a>
+            {% endif %}
+            </p>
+          {% endif %}
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <div class="col-12 text-body-tertiary">
+      {% if user.is_authenticated %}
+        <small>{{ user.profile.get_role_display }} role, user since {{ user.date_joined|date:"j F Y" }}</small>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Edit Profile Button -->
+  <div class="row mt-3 mb-5">
+    <div class="col-12">
+      {% if request.user == user_obj or request.user.profile.role == "system_owner" %}
+        <a href="{% url 'edit_profile' %}" class="btn btn-primary">Edit Profile</a>
+      {% endif %}
+    </div>
+  </div>
+
+</div> <!-- end container -->
+
+{% endblock %}

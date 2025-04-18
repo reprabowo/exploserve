@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+{% block title %}Footer Management{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+  <h1>Footer Columns</h1>
+  <a href="{% url 'create_footer_column' %}" class="btn btn-primary mb-3">Create New Footer Column</a>
+
+  <div class="table-responsive">
+    <table class="table table-striped align-middle">
+      <thead class="table-light">
+        <tr>
+          <th scope="col">Order</th>
+          <th scope="col">Title</th>
+          <th scope="col">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for column in columns %}
+        <tr>
+          <td>{{ column.order }}</td>
+          <td><strong>{{ column.title }}</strong></td>
+          <td>
+            <a href="{% url 'update_footer_column' column.id %}" class="btn btn-warning btn-sm me-1 mb-1">Edit</a>
+            <a href="{% url 'delete_footer_column' column.id %}" class="btn btn-danger btn-sm mb-1">Delete</a>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="4">No footer columns available.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <a href="{% url 'dashboard' %}" class="btn btn-secondary mt-3">Back to Dashboard</a>
+</div>
+{% endblock %}
+
+{% block footer %}
+  <footer class="bg-light">
+    <div class="container py-4">
+      <div class="row">
+        {% for column in footer_columns %}
+          <div class="col-12 col-md-6 col-lg-3 text-left">
+            <h5>{{ column.title }}</h5>
+            <p>{{ column.content|safe }}</p>
+          </div>
+        {% endfor %}
+      </div>
+      <hr>
+      <div class="row">
+        <div class="col-lg-12">
+          <small>
+            © {% now "Y" %} ExploServe. <br>Developed by Romanus Edy Prabowo using Python and Django.<br>
+            The theme uses Bootswatch Sandstone (code by <a href="https://github.com/thomaspark/bootswatch/blob/master/LICENSE" rel="nofollow">Thomas Park</a>) based on <a href="https://getbootstrap.com/" rel="nofollow">Bootstrap</a>.<br>
+            Icons from <a href="https://icons.getbootstrap.com/" rel="nofollow">Bootstrap Icons</a> and web fonts from <a href="https://fonts.google.com/" rel="nofollow">Google</a>.
+          </small>
+        </div>        
+      </div>
+    </div>
+  </footer>
+{% endblock %}

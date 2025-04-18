@@ -1,0 +1,122 @@
+{% extends 'base.html' %}
+{% block title %}Manage Announcements{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+  <div class="row">
+    <!-- Left: Table -->
+    <div class="col-lg-8">
+      <h1>Manage Announcements</h1>
+      <a href="{% url 'create_announcement' %}" class="btn btn-primary mb-3">Create New Announcement</a>
+
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            <th>Title</th>
+            <th>Audience</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for announcement in announcements %}
+            <tr>
+              <td>
+                <strong>{{ announcement.title }}</strong><br>
+                <small>{{ announcement.created_at|date:"Y-m-d H:i" }}</small>
+              </td>
+              <td><strong>{{ announcement.get_audience_display }}</strong><br>
+                {% if announcement.institution %}
+                  <small>{{ announcement.institution.name }}</small>
+                {% else %}
+                  N/A
+                {% endif %}
+              </td>
+              <td>
+                <a href="{% url 'announcement_detail' announcement.id %}" class="btn btn-info btn-sm">View</a>
+                <a href="{% url 'update_announcement' announcement.id %}" class="btn btn-warning btn-sm">Edit</a>
+                <a href="{% url 'delete_announcement' announcement.id %}" class="btn btn-danger btn-sm">Delete</a>
+              </td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="5" class="text-center">No announcements found.</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Right: Filter Sidebar -->
+    <div class="col-lg-4">
+      <div class="card">
+        <div class="card-header">Filter Announcements</div>
+        <div class="card-body">
+          <form method="get" action="{% url 'announcement_list' %}">
+            <!-- Title -->
+            <div class="mb-3">
+              <label for="search" class="form-label">Search by Title</label>
+              <input type="text"
+                     class="form-control"
+                     id="search"
+                     name="search"
+                     value="{{ search }}">
+            </div>
+
+            <!-- Audience -->
+            <div class="mb-3">
+              <label class="form-label">Audience</label>
+              <select name="audience" class="form-select">
+                <option value="">All</option>
+                <option value="sitewide" {% if audience == "sitewide" %}selected{% endif %}>Sitewide</option>
+                <option value="selected_institution"
+                        {% if audience == "selected_institution" %}selected{% endif %}>
+                  Selected Institution
+                </option>
+              </select>
+            </div>
+
+            <!-- Institution -->
+            <div class="mb-3">
+              <label for="institution" class="form-label">Institution</label>
+              <select name="institution" id="institution" class="form-select">
+                <option value="">All</option>
+                {% for inst in all_institutions %}
+                  <option value="{{ inst.id }}"
+                    {% if inst.id|stringformat:"s" == selected_inst %}selected{% endif %}>
+                    {{ inst.name }}
+                  </option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <!-- Date From -->
+            <div class="mb-3">
+              <label for="date_from" class="form-label">Date From</label>
+              <input type="date"
+                     class="form-control"
+                     id="date_from"
+                     name="date_from"
+                     value="{{ date_from }}">
+            </div>
+
+            <!-- Date To -->
+            <div class="mb-3">
+              <label for="date_to" class="form-label">Date To</label>
+              <input type="date"
+                     class="form-control"
+                     id="date_to"
+                     name="date_to"
+                     value="{{ date_to }}">
+            </div>
+
+            <!-- Submit & Reset -->
+            <button type="submit" class="btn btn-primary w-100">Apply Filters</button>
+            <a href="{% url 'announcement_list' %}"
+               class="btn btn-secondary w-100 mt-2">Reset Filters</a>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

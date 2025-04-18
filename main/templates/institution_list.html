@@ -1,0 +1,123 @@
+{% extends 'base.html' %}
+{% block title %}Institutions{% endblock %}
+{% block content %}
+<div class="container mt-5">
+  <h1 class="mb-4">Institutions</h1>
+  <div class="row">
+    <!-- Left Column: Institution List -->
+    <div class="col-lg-8">
+      {% if institutions %}
+        {% for institution in institutions %}
+          <div class="card mb-3">
+            <div class="row g-0 align-items-center">
+              <!-- Logo Column (Left) -->
+              <div class="col-auto">
+                {% if institution.logo %}
+                  <img src="{{ institution.logo.url }}" 
+                       class="img-fluid rounded-start" 
+                       alt="{{ institution.name }} Logo"
+                       style="max-width: 100px; max-height: 100px; margin: 10px;">
+                {% else %}
+                  <img src="/static/images/default_logo.png" 
+                       class="img-fluid rounded-start" 
+                       alt="Default Logo"
+                       style="max-width: 100px; max-height: 100px; margin: 10px;">
+                {% endif %}
+              </div>
+              <!-- Content Column (Right) -->
+              <div class="col">
+                <div class="card-body">
+                  <h5 class="card-title">{{ institution.name }}</h5>
+                  <p  class="card-text flex-grow-1"><small>{{ institution.description|truncatewords:20 }}</small></p>
+                  <a href="{% url 'institution_profile' institution.id %}" class="btn btn-primary mt-auto" style="align-self: flex-start">View Profile</a>
+                  <span class="btn btn-success">{{ institution.get_akreditasi_display }}</span>
+                  <span class="btn btn-info">{{ institution.sinta_score }}</span>
+                  <span  class="btn btn-info">{{ institution.sinta_score3 }}</span>
+                  <span class="text-body-tertiary"><small>Overall and 3 Yrs SINTA Scores</small></span>
+                </div>
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      {% else %}
+        <p>No institutions found.</p>
+      {% endif %}
+      {% if is_paginated %}
+      <nav aria-label="Institution pagination">
+        <ul class="pagination justify-content-center">
+          {% if institutions.has_previous %}
+            <li class="page-item">
+              <a class="page-link" href="?search={{ search_query }}&klaster={{ klaster_filter }}&page={{ institutions.previous_page_number }}">Previous</a>
+            </li>
+          {% endif %}
+
+          {% for num in institutions.paginator.page_range %}
+            <li class="page-item {% if institutions.number == num %}active{% endif %}">
+              <a class="page-link" href="?search={{ search_query }}&klaster={{ klaster_filter }}&page={{ num }}">{{ num }}</a>
+            </li>
+          {% endfor %}
+
+          {% if institutions.has_next %}
+            <li class="page-item">
+              <a class="page-link" href="?search={{ search_query }}&klaster={{ klaster_filter }}&page={{ institutions.next_page_number }}">Next</a>
+            </li>
+          {% endif %}
+        </ul>
+      </nav>
+
+      <div class="text-center">
+        <a href="?search={{ search_query }}&klaster={{ klaster_filter }}&show=all" class="btn btn-sm btn-outline-secondary">Show All</a>
+      </div>
+      {% elif show_all %}
+      <div class="text-center mt-3">
+        <a href="?search={{ search_query }}&klaster={{ klaster_filter }}" class="btn btn-sm btn-outline-secondary">Paginate</a>
+      </div>
+      {% endif %}
+      </div>
+    
+    <!-- Right Column: Filter Sidebar -->
+<div class="col-lg-4">
+  <div class="card">
+    <div class="card-header">Filter</div>
+    <div class="card-body">
+      <form method="get" action="{% url 'institution_list' %}">
+        <div class="mb-3">
+          <label for="institution_search" class="form-label">Search by Name</label>
+          <input type="text" class="form-control" id="institution_search" name="search" value="{{ request.GET.search }}">
+        </div>
+        <div class="mb-3">
+          <label for="akreditasi" class="form-label">Filter by Akreditasi</label>
+          <select name="akreditasi" class="form-select" id="akreditasi">
+            <option value="">All</option>
+            <option value="internasional" {% if akreditasi_filter == "internasional" %}selected{% endif %}>Internasional</option>
+            <option value="unggul" {% if akreditasi_filter == "unggul" %}selected{% endif %}>Unggul</option>
+            <option value="baik sekali" {% if akreditasi_filter == "baik sekali" %}selected{% endif %}>Baik Sekali</option>
+            <option value="baik" {% if akreditasi_filter == "baik" %}selected{% endif %}>Baik</option>
+            <option value="a" {% if akreditasi_filter == "a" %}selected{% endif %}>A</option>
+            <option value="b" {% if akreditasi_filter == "b" %}selected{% endif %}>B</option>
+            <option value="c" {% if akreditasi_filter == "c" %}selected{% endif %}>C</option>
+            <option value="tidak terakreditasi" {% if akreditasi_filter == "tidak terakreditasi" %}selected{% endif %}>Tidak Terakreditasi</option>
+          </select>
+        </div>
+        <div class="mb-3">
+          <label for="klaster" class="form-label">Filter by Klaster</label>
+          <select name="klaster" class="form-select" id="klaster">
+            <option value="">All</option>
+            <option value="mandiri" {% if klaster_filter == "mandiri" %}selected{% endif %}>Mandiri</option>
+            <option value="utama" {% if klaster_filter == "utama" %}selected{% endif %}>Utama</option>
+            <option value="madya" {% if klaster_filter == "madya" %}selected{% endif %}>Madya</option>
+            <option value="pratama" {% if klaster_filter == "pratama" %}selected{% endif %}>Pratama</option>
+            <option value="binaan" {% if klaster_filter == "binaan" %}selected{% endif %}>Binaan</option>
+          </select>
+        </div>
+        <div class="d-grid gap-2">
+          <button type="submit" class="btn btn-primary">Apply Filters</button>
+          <a href="{% url 'institution_list' %}" class="btn btn-outline-secondary">Reset Filters</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+  </div>
+</div>
+{% endblock %}

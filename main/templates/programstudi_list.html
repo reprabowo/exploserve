@@ -1,0 +1,136 @@
+{% extends 'base.html' %}
+{% block title %}Study Programs{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+  <h1>Study Programs</h1>
+    {% if request.user.profile.role in "system_owner system_admin institution_admin" %}
+      <a href="{% url 'create_programstudi' %}" class="btn btn-primary mb-3">Create New Study Program</a>
+    {% endif %}
+  
+  <div class="row">
+    <!-- Left Column: Program Table -->
+    <div class="col-lg-8">
+      {% if programs %}
+        <table class="table table-striped">
+          <thead>
+            <tr>
+              <th>Program Studi</th>
+              <th>Jenjang</th>
+              <th>Status</th>
+              <th>Akreditasi</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for program in programs %}
+              <tr>
+                <td>
+                  <small>{{ program.institution.name }}</small><br>
+                  <strong>{{ program.nama_program_studi }}</strong>
+                </td>
+                <td>{{ program.jenjang }}</td>
+                <td>{{ program.status }}</td>
+                <td>{{ program.get_akreditasi_ps_display }}</td>
+                <td>
+                  <a href="{% url 'programstudi_detail' program.id %}" class="btn btn-info btn-sm mb-1">View</a>
+                  <a href="{% url 'update_programstudi' program.id %}" class="btn btn-warning btn-sm mb-1">Edit</a>
+                  <a href="{% url 'delete_programstudi' program.id %}" class="btn btn-danger btn-sm mb-1">Delete</a>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+
+        {% if programs.paginator.count > 10 %}
+        <!-- Pagination -->
+        {% if is_paginated %}
+            <nav>
+            <ul class="pagination pagination-sm justify-content-center">
+                {% if programs.has_previous %}
+                <li class="page-item">
+            <a class="page-link" href="?page={{ programs.previous_page_number }}">Previous</a>
+                </li>
+                {% endif %}
+                {% for num in programs.paginator.page_range %}
+                <li class="page-item {% if programs.number == num %}active{% endif %}">
+                    <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                </li>
+                {% endfor %}
+                {% if programs.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ programs.next_page_number }}">Next</a>
+                </li>
+                {% endif %}
+            </ul>
+            </nav>
+        {% endif %}
+
+        <!-- Show All / Paginate Toggle -->
+        <div class="text-center mt-2">
+            {% if not show_all %}
+            <a href="?show=all" class="btn btn-outline-secondary btn-sm">Show All</a>
+            {% else %}
+            <a href="?" class="btn btn-outline-secondary btn-sm">Paginate</a>
+            {% endif %}
+        </div>
+        {% endif %}
+
+      {% else %}
+        <p class="text-muted">No study programs found.</p>
+      {% endif %}
+    </div>
+
+    <!-- Right Column: Filter Form -->
+    <div class="col-lg-4">
+      <div class="card mb-4">
+        <div class="card-header">Filter Study Programs</div>
+        <div class="card-body">
+          <form method="get">
+            <div class="mb-3">
+              <label class="form-label">Program Name</label>
+              <input type="text" name="q" class="form-control" value="{{ query }}">
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Jenjang</label>
+              <select name="jenjang" class="form-select">
+                <option value="">All</option>
+                <option value="D3" {% if jenjang == "D3" %}selected{% endif %}>D3</option>
+                <option value="S1" {% if jenjang == "S1" %}selected{% endif %}>S1</option>
+                <option value="S2" {% if jenjang == "S2" %}selected{% endif %}>S2</option>
+                <option value="S3" {% if jenjang == "S3" %}selected{% endif %}>S3</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Status</label>
+              <select name="status" class="form-select">
+                <option value="">All</option>
+                <option value="aktif" {% if status == "aktif" %}selected{% endif %}>Aktif</option>
+                <option value="tidak aktif" {% if status == "tidak aktif" %}selected{% endif %}>Tidak Aktif</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Akreditasi</label>
+              <select name="akreditasi_ps" class="form-select">
+                <option value="">All</option>
+                <option value="Internasional" {% if akreditasi_ps == "Internasional" %}selected{% endif %}>Internasional</option>
+                <option value="unggul" {% if akreditasi_ps == "Unggul" %}selected{% endif %}>Unggul</option>
+                <option value="baik_sekali" {% if akreditasi_ps == "Baik Sekali" %}selected{% endif %}>Baik Sekali</option>
+                <option value="baik" {% if akreditasi_ps == "Baik" %}selected{% endif %}>Baik</option>
+                <option value="a" {% if akreditasi_ps == "A" %}selected{% endif %}>A</option>
+                <option value="b" {% if akreditasi_ps == "B" %}selected{% endif %}>B</option>
+                <option value="c" {% if akreditasi_ps == "C" %}selected{% endif %}>C</option>
+                <option value="Tidak Terakreditasi" {% if akreditasi_ps == "Tidak Terakreditasi" %}selected{% endif %}>Tidak Terakreditasi</option>
+              </select>
+            </div>
+            <button type="submit" class="btn btn-primary w-100">Apply Filter</button>
+            <a href="{% url 'programstudi_list' %}" class="btn btn-outline-secondary w-100 mt-2">Reset Filter</a>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <a href="{% url 'institution_list' %}" class="btn btn-secondary">Back to Institutions</a>
+</div>
+{% endblock %}

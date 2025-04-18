@@ -1,0 +1,131 @@
+{% extends 'base.html' %}
+{% load permissions_tags %}
+{% block title %}User Management{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-lg-8">
+            <h1>User Management</h1>
+            <a href="{% url 'create_user' %}" class="btn btn-primary mb-3">Create New User</a>
+        </div>    
+    </div>    
+    <div class="row">
+    <!-- Left Column: User List -->
+    <div class="col-lg-8">
+      <table class="table table-striped">
+          <thead>
+              <tr>
+                  <th>User</th>
+                  <th>Role</th>
+                  <th>Actions</th>
+              </tr>
+          </thead>
+          <tbody>
+              {% for user in users %}
+              <tr>
+                  <td>
+                    <strong>{{ user.profile.nama_lengkap }}</strong><br>
+                    <small>{{ user.email }}</small></td>
+                  <td>
+                    <strong>{{ user.profile.get_role_display }}</strong>
+                    {% if user.profile.institution %}
+                      <br><small>{{ user.profile.institution.name }}</small>
+                    {% endif %}
+                  </td>
+                  <td>
+                    <a href="{% url 'profile_detail' user.id %}" class="btn btn-info btn-sm mb-1">View</a>
+                    {% if request.user|can_manage_user:user %}
+                      <a href="{% url 'update_user' user.id %}" class="btn btn-warning btn-sm mb-1">Edit</a>
+                    {% endif %}
+                    {% if request.user|can_delete_user:user %}
+                      <a href="{% url 'delete_user' user.id %}" class="btn btn-danger btn-sm mb-1">Delete</a>
+                    {% endif %}
+              </tr>
+              {% endfor %}
+          </tbody>
+      </table>
+
+      <!-- Pagination -->
+      {% if paginator %}
+      <nav aria-label="Page navigation">
+        <ul class="pagination pagination pagination-sm justify-content-center mt-3">
+          {% if users.has_previous %}
+            <li class="page-item">
+              <a class="page-link" href="?page={{ users.previous_page_number }}{% if request.GET.show_all %}&show_all=1{% endif %}">&laquo;</a>
+            </li>
+          {% endif %}
+
+          {% for num in users.paginator.page_range %}
+            <li class="page-item {% if users.number == num %}active{% endif %}">
+              <a class="page-link" href="?page={{ num }}{% if request.GET.show_all %}&show_all=1{% endif %}">{{ num }}</a>
+            </li>
+          {% endfor %}
+
+          {% if users.has_next %}
+            <li class="page-item">
+              <a class="page-link" href="?page={{ users.next_page_number }}{% if request.GET.show_all %}&show_all=1{% endif %}">&raquo;</a>
+            </li>
+          {% endif %}
+        </ul>
+      </nav>
+      <div class="pagination pagination-sm justify-content-center mt-3">
+        <a href="?show_all=1" class="btn btn-outline-secondary btn-sm">Show All</a>
+      </div>
+      {% elif show_all %}
+      <div class="pagination pagination-sm justify-content-center mt-3">
+        <a href="?{% if request.GET.name %}name={{ request.GET.name }}&{% endif %}
+                  {% if request.GET.email %}email={{ request.GET.email }}&{% endif %}
+                  {% if request.GET.role %}role={{ request.GET.role }}&{% endif %}
+                  {% if request.GET.institution %}institution={{ request.GET.institution }}&{% endif %}"
+          class="btn btn-outline-secondary">Show 10 per page</a>
+      </div>
+      {% endif %}
+
+    </div>
+    
+    <!-- Filter Sidebar (Right Column) -->
+    <div class="col-lg-4">
+      <div class="card">
+        <div class="card-header">Filter Users</div>
+          <div class="card-body">
+            <form method="get" action="{% url 'user_list' %}">
+              <div class="mb-3">
+                <label for="name_filter" class="form-label">Name</label>
+                <input type="text" name="name" id="name_filter" class="form-control" value="{{ request.GET.name }}">
+              </div>
+              <div class="mb-3">
+                <label for="email_filter" class="form-label">Email</label>
+                <input type="text" name="email" id="email_filter" class="form-control" value="{{ request.GET.email }}">
+              </div>
+              <div class="mb-3">
+                <label for="role_filter" class="form-label">Role</label>
+                <select name="role" id="role_filter" class="form-select">
+                <option value="">All</option>
+                  {% for key, label in roles %}
+                <option value="{{ key }}" {% if request.GET.role == key %}selected{% endif %}>{{ label }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="mb-3">
+                <label for="institution_filter" class="form-label">Institution</label>
+                <select name="institution" id="institution_filter" class="form-select">
+                  <option value="">All</option>
+                  {% for inst in institutions %}
+                  <option value="{{ inst.id }}" {% if request.GET.institution == inst.id|stringformat:"s" %}selected{% endif %}>
+                  {{ inst.name }}
+                  </option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="d-grid gap-2">
+                <button type="submit" class="btn btn-primary">Apply Filters</button>
+                <a href="{% url 'user_list' %}" class="btn btn-outline-secondary">Reset Filters</a>
+              </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  </div>
+</div>
+{% endblock %}

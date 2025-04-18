@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+{% block title %}{{ action }} Institution{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1>{{ action }} Institution</h1>
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {% for field in form %}
+        <div class="mb-3">
+            {{ field.label_tag }}
+            {{ field|add_class:"form-control" }}
+            {{ field.errors }}
+        </div>
+        {% endfor %}
+        <button type="submit" class="btn btn-success">{{ action }}</button>
+    </form>
+    <a href="{% url 'institution_list' %}" class="btn btn-secondary mt-3">Back to Institution List</a>
+</div>
+{% endblock %}

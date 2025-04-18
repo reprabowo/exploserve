@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+{% block title %}{{ program.nama_program_studi }} - Detail{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+
+  <!-- Row 1: Title -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <h1 class="display-5 text-end">PS {{ program.nama_program_studi }}</h1>
+    </div>
+  </div>
+
+  <!-- Row 2: Two Columns -->
+  <div class="row mb-5">
+    <!-- Left: Jumbotron-style -->
+    <div class="col-md-8 mb-4">
+      <div class="bg-light p-4 rounded shadow-sm h-100 text-end">
+        {% if program.institution.logo %}
+          <img src="{{ program.institution.logo.url }}" alt="{{ program.institution.name }} Logo"
+               class="img-fluid mb-3" style="max-height: 100px;">
+        {% endif %}
+        <h4 class="mb-3">{{ program.institution.name }}</h4>
+        <p><small class="blockquote-footer">{{ program.institution.description|default:"No description available." }}</small></p>
+        <a href="{% url 'institution_profile' program.institution.id %}" class="btn btn-outline-primary btn-sm">View Institution</a>
+      </div>
+    </div>
+
+    <!-- Right: Study Program Info -->
+    <div class="col-md-4 mb-4">
+      <div class="card h-100">
+        <div class="card-body">
+          <p><strong>PS ID:</strong> {{ program.ps_id }}</p>
+          <p><strong>Jenjang:</strong> {{ program.jenjang }}</p>
+          <p><strong>Status:</strong> {{ program.status }}</p>
+          <p><strong>Akreditasi PS:</strong> {{ program.get_akreditasi_ps_display }}</p>
+          <p><strong>SINTA ID:</strong> <a href="https://sinta.kemdikbud.go.id/affiliations/departments/{{ program.institution.sinta_id }}/{{ program.institution.pt_id }}" target="_blank">{{ program.institution.sinta_id }}/{{ program.sinta_id }}</a></p>
+          <strong>SINTA Scores:</strong>
+            <div class="row gx-0 mt-1">
+              <div class="col-3" style="text-align: center;">
+                <span class="btn btn-info w-100 me-1">{{ sinta_score }}</span>
+                <span class="text-body-tertiary"><small>Overall</small></span>
+              </div>
+              <div class="col-3" style="text-align: center;">
+                <span class="btn btn-info w-100 ms-1">{{ sinta_score3 }}</span>
+                <span class="text-body-tertiary"><small>3 Years</small></span>
+              </div>
+            </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Row 3: Affiliated Users -->
+  <div class="row">
+    <div class="col-12 mb-3">
+      <h2 class="h4">Affiliated Researchers</h2>
+    </div>
+    {% if researchers %}
+      {% for researcher in researchers %}
+        <div class="col-sm-6 col-md-4 col-lg-2 mb-4">
+          <div class="card h-100">
+            {% if researcher.profile_photo %}
+                <img src="{{ researcher.profile_photo.url }}" class="card-img-top img-fluid" style="height:175px; object-fit:cover;">
+              {% else %}
+                <img src="https://www.shutterstock.com/image-vector/avatar-gender-neutral-silhouette-vector-600nw-2470054311.jpg" class="card-img-top img-fluid" style="height:175px; object-fit:cover;">
+              {% endif %}
+            <div class="card-body d-flex flex-column p-2 text-center">
+              <h6 class="card-title">{{ researcher.nama_lengkap|default:researcher.user.username }}</h6>
+              {% if researcher.gelar_depan %}
+                <p class="card-text small">{{ researcher.gelar_depan }}</p>
+              {% endif %}
+              {% if researcher.gelar_belakang %}
+                <p class="card-text small">{{ researcher.gelar_belakang }}</p>
+              {% endif %}
+              {% if researcher.research_interest %}
+                <p class="card-text small d-flex flex-wrap text-start">{{ researcher.research_interest|truncatewords:30 }}</p>
+              {% endif %}
+              <a href="{% url 'profile_detail' researcher.user.id %}" class="btn btn-sm btn-outline-primary mt-auto w-auto mx-auto">View</a>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    {% else %}
+      <div class="col-12">
+        <p class="text-muted">No affiliated researchers found for this study program.</p>
+      </div>
+    {% endif %}
+  </div>
+
+  <div class="row mt-4">
+    <div class="col-12">
+      <a href="{% url 'programstudi_list' %}" class="btn btn-secondary">Back to Study Programs</a>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

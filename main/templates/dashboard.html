@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+  <!-- Jumbotron-like Hero Section -->
+  <div class="p-5 mb-4 bg-light rounded-3">
+    <div class="container-fluid py-5">
+      <h1 class="display-5 fw-bold">Welcome, {{ request.user.username }}!</h1>
+      <p class="col-md-8 fs-4">This is your dashboard where you can manage your account, view statistics, and access admin tools.</p>
+      {% if user.profile.role == "system_owner" %}
+        <a href="{% url 'user_list' %}" class="btn btn-primary btn-lg">Manage Users</a>
+      {% else %}
+        <a href="{% url 'password_change' %}" class="btn btn-warning btn-lg">Change Password</a>
+      {% endif %}
+    </div>
+  </div>
+  
+  <h2 class="text-center mt-4 mb-4">Pengumuman Lembaga Terkini</h2>
+  <div class="row">
+    {% for announcement in announcements %}
+      <div class="col-12 col-md-6 col-lg-4 mb-4">
+        {% if announcement.files.all|length %}
+          <!-- If you want to indicate a card with attachments, you could still apply a different style
+               by using an if condition; otherwise, remove the conditional entirely. -->
+          <div class="card text-white bg-info mb-3 h-100">
+        {% else %}
+          <div class="card h-100">
+        {% endif %}
+            <div class="card-body">
+              <h5 class="card-title">{{ announcement.title }}</h5>
+              <!-- Add publication date/time and creator full name -->
+              <p class="card-subtitle mb-2 text-muted">
+                <small>{{ announcement.created_at|date:"d M Y, H:i" }}{% if announcement.created_by %} by {{ announcement.created_by.profile.nama_lengkap }}{% endif %}</small>
+              </p>
+              <p class="card-text">{{ announcement.content|truncatewords:20|safe }}</p>
+              <a href="{% url 'announcement_detail' announcement.id %}" class="btn btn-primary">Read More</a>
+            </div>
+          </div>
+      </div>
+    {% empty %}
+      <div class="col-12">
+        <p>No announcements available at this time.</p>
+      </div>
+    {% endfor %}
+  </div>
+
+  <!-- Additional Dashboard Actions -->
+  <p>
+    <a class="btn btn-primary" href="{% url 'dashboard_announcements' %}">Arsip Pengumuman Lembaga</a>
+    <a href="{% url 'home' %}" class="btn btn-secondary">Home</a>
+  </p>
+</div>
+{% endblock %}
+
+{% block footer %}
+  <footer class="bg-light">
+    <div class="container py-4">
+      <div class="row">
+        {% for column in footer_columns %}
+          <div class="col-12 col-md-6 col-lg-3 text-left">
+            <h5>{{ column.title }}</h5>
+            <p>{{ column.content|safe }}</p>
+          </div>
+        {% endfor %}
+      </div>
+      <hr>
+      <div class="row">
+        <div class="col-lg-12">
+          <small>
+            © {% now "Y" %} ExploServe. <br>Developed by Romanus Edy Prabowo using Python and Django.<br>
+            The theme uses Bootswatch Sandstone (code by <a href="https://github.com/thomaspark/bootswatch/blob/master/LICENSE" rel="nofollow">Thomas Park</a>) based on <a href="https://getbootstrap.com/" rel="nofollow">Bootstrap</a>.<br>
+            Icons from <a href="https://icons.getbootstrap.com/" rel="nofollow">Bootstrap Icons</a> and web fonts from <a href="https://fonts.google.com/" rel="nofollow">Google</a>.
+          </small>
+        </div>        
+      </div>
+    </div>
+  </footer>
+{% endblock %}

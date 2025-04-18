@@ -1,0 +1,158 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load widget_tweaks %}
+
+{% block title %}Browse Users{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+  <h1 class="mb-4">Daftar Peneliti</h1>
+  <div class="row">
+
+    <!-- Left Column: User Cards -->
+    <div class="col-lg-8">
+      {% if page_obj %}
+        {% for profile in page_obj %}
+          <div class="card bg-light mb-3">
+            <div class="row g-0 align-items-center">
+              <!-- Photo -->
+              <div class="col-12 col-md-2 text-center" >
+                {% if profile.profile_photo %}
+                  <img src="{{ profile.profile_photo.url }}" class="card-img-left img-fluid" alt="{{ profile.nama_lengkap }}">
+                {% else %}
+                <img
+                src="https://www.shutterstock.com/image-vector/avatar-gender-neutral-silhouette-vector-600nw-2470054311.jpg"
+                alt="No Photo"
+                class="card-img-top img-fluid">
+                {% endif %}
+              </div>
+              <!-- Profile Info -->
+              <div class="col-12 col-md-6">
+                <div class="card-body">
+                  <h5 class="card-title">{{ profile.nama_lengkap }}</h5>
+                  <p>
+                    {% if profile.institution %}<small>{{ profile.institution.name }}</small><br>{% endif %}
+                  </p>
+                  {% if profile.sinta_score %}<button class="btn btn-info">{{ profile.sinta_score }}</button>{% endif %}
+                  {% if profile.sinta_score %}<button class="btn btn-info">{{ profile.sinta_score3 }}</button>{% endif %}
+                  {% if profile.sinta_scoresc %}<button class="btn btn-warning">{{ profile.sinta_scoresc }}</button>{% endif %}
+                  {% if profile.sinta_scorego %}<button class="btn btn-primary">{{ profile.sinta_scorego }}</button>{% endif %}
+                  <a href="{% url 'profile_detail' profile.user.id %}" class="btn btn-outline-primary">View Profile</a>
+                </div>
+              </div>
+              <!-- Score Info -->
+              <div class="col-12 col-md-4">
+                <div class="card-body">
+                  <div class="text-end mt-2">
+                    {% if profile.research_interest %}<small class="blockquote-footer">Research Interest{% if profile.program_studi %} {{ profile.program_studi }}{% endif %}: {{ profile.research_interest|truncatewords:10 }}</small>{% endif %}
+                  </div>
+                </div>
+              </div>
+              {% if profile_obj.institution and profile_obj.institution.logo %}
+              <img
+                src="{{ profile_obj.institution.logo.url }}"
+                alt="Institution Logo"
+                class="position-absolute"
+                style="top: 10px; right: 10px; width: 5%; height: auto;">
+              {% endif %}
+            </div>
+          </div>
+        {% empty %}
+          <p class="text-muted">No matching users found.</p>
+        {% endfor %}
+
+        <!-- Pagination -->
+        {% if is_paginated %}
+        <nav aria-label="User pagination">
+          <ul class="pagination pagination-sm justify-content-center mt-3">
+            {% if page_obj.has_previous %}
+              <li class="page-item">
+                <a class="page-link" href="?{% if request.GET.q %}q={{ request.GET.q }}&{% endif %}{% if request.GET.institution %}institution={{ request.GET.institution }}&{% endif %}{% if request.GET.program %}program={{ request.GET.program }}&{% endif %}{% if request.GET.role %}role={{ request.GET.role }}&{% endif %}{% if request.GET.sort %}sort={{ request.GET.sort }}&{% endif %}page={{ page_obj.previous_page_number }}">Previous</a>
+              </li>
+            {% endif %}
+
+            {% for num in paginator.page_range %}
+              <li class="page-item {% if page_obj.number == num %}active{% endif %}">
+                <a class="page-link" href="?{% if request.GET.q %}q={{ request.GET.q }}&{% endif %}{% if request.GET.institution %}institution={{ request.GET.institution }}&{% endif %}{% if request.GET.program %}program={{ request.GET.program }}&{% endif %}{% if request.GET.role %}role={{ request.GET.role }}&{% endif %}{% if request.GET.sort %}sort={{ request.GET.sort }}&{% endif %}page={{ num }}">{{ num }}</a>
+              </li>
+            {% endfor %}
+
+            {% if page_obj.has_next %}
+              <li class="page-item">
+                <a class="page-link" href="?{% if request.GET.q %}q={{ request.GET.q }}&{% endif %}{% if request.GET.institution %}institution={{ request.GET.institution }}&{% endif %}{% if request.GET.program %}program={{ request.GET.program }}&{% endif %}{% if request.GET.role %}role={{ request.GET.role }}&{% endif %}{% if request.GET.sort %}sort={{ request.GET.sort }}&{% endif %}page={{ page_obj.next_page_number }}">Next</a>
+              </li>
+            {% endif %}
+          </ul>
+        </nav>
+        {% endif %}
+        {% else %}
+        <p class="text-muted">No user data to display.</p>
+        {% endif %}
+        {% if is_paginated %}
+        <div class="pagination pagination-sm justify-content-center mt-3">
+            <a href="?{% for key, val in request.GET.items %}{% if key != 'show' %}{{ key }}={{ val }}&{% endif %}{% endfor %}show=all" class="btn btn-outline-secondary btn-sm">
+            Show All
+            </a>
+        </div>
+        {% elif request.GET.show == 'all' %}
+        <div class="pagination pagination-sm justify-content-center mt-3">
+            <a href="?{% for key, val in request.GET.items %}{% if key != 'show' %}{{ key }}={{ val }}&{% endif %}{% endfor %}" class="btn btn-outline-secondary btn-sm">
+            Paginate
+            </a>
+        </div>
+    {% endif %}
+
+    </div>
+
+    
+
+    <!-- Right Column: Filters -->
+    <div class="col-lg-4">
+      <form method="get" class="card p-3">
+        <div class="mb-3">
+          <input type="text" name="q" class="form-control" placeholder="Search by name or interest..." value="{{ request.GET.q }}">
+        </div>
+        <div class="mb-3">
+          <select name="institution" class="form-select">
+            <option value="">All Institutions</option>
+            {% for inst in institutions %}
+              <option value="{{ inst.id }}" {% if request.GET.institution == inst.id|stringformat:"s" %}selected{% endif %}>{{ inst.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="mb-3">
+          <select name="program" class="form-select">
+            <option value="">All Programs</option>
+            {% for ps in programs %}
+              <option value="{{ ps.id }}" {% if request.GET.program == ps.id|stringformat:"s" %}selected{% endif %}>{{ ps.nama_program_studi }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="mb-3">
+          <select name="role" class="form-select">
+            <option value="">All Roles</option>
+            {% for key, val in roles %}
+              <option value="{{ key }}" {% if request.GET.role == key %}selected{% endif %}>{{ val }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="mb-3">
+          <select name="sort" class="form-select">
+            <option value="">Sort by</option>
+            <option value="name" {% if request.GET.sort == "name" %}selected{% endif %}>Name (A-Z)</option>
+            <option value="sinta" {% if request.GET.sort == "sinta" %}selected{% endif %}>SINTA Overall Score (High to Low)</option>
+            <option value="sinta3" {% if request.GET.sort == "sinta3" %}selected{% endif %}>SINTA 3 Yrs Score (High to Low)</option>
+            <option value="scopus" {% if request.GET.sort == "scopus" %}selected{% endif %}>Scopus Score (High to Low)</option>
+            <option value="google" {% if request.GET.sort == "google" %}selected{% endif %}>Google Scholar Score (High to Low)</option>
+          </select>
+        </div>
+        <div class="d-grid gap-2">
+          <button type="submit" class="btn btn-primary">Apply Filters</button>
+          <a href="?" class="btn btn-outline-secondary">Reset</a>
+        </div>
+      </form>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

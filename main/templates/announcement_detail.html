@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+{% block title %}{{ announcement.title }} – Announcement{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+  <h1 class="mb-3">{{ announcement.title }}</h1>
+  <hr>
+
+  <div class="row">
+    <!-- LEFT COLUMN: image, date & author -->
+    <div class="col-12 col-md-6 mb-4">
+      {% if announcement.image %}
+        <img
+          src="{{ announcement.image.url }}"
+          alt="{{ announcement.title }} Image"
+          class="img-fluid rounded mb-3"
+        >
+      {% endif %}
+
+      <p class="mb-1">
+        <strong>Published on:</strong>
+        {{ announcement.created_at|date:"d M Y, H:i" }} {% if announcement.created_by %}
+        by {{ announcement.created_by.profile.nama_lengkap }}
+        </p>
+      {% endif %}
+
+      <p><strong>Audience:</strong>
+        {% if announcement.audience == "sitewide"  %}
+          PPAVI
+        {% elif announcement.audience == "selected_institution" and announcement.institution %}
+          {{ announcement.institution.name }}
+        {% endif %}
+      </p>
+    </div>
+
+    <!-- RIGHT COLUMN: content & attachments -->
+    <div class="col-12 col-md-6 mb-4">
+      <div class="mb-4">
+        {{ announcement.content|safe }}
+      </div>
+
+      {% if announcement.files.all %}
+        <h5>Attachments</h5>
+        <ul class="list-unstyled mb-4">
+          {% for file in announcement.files.all %}
+            <li>
+              <a href="{{ file.file.url }}" target="_blank">
+                {{ file.file.name|slice:"announcements/files/" }}
+              </a>
+            </li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+
+      <div class="mt-4">
+        {% if announcement.audience == "sitewide" %}
+          <a href="{% url 'announcement_public_list' %}" class="btn btn-outline-primary">
+            ← Back to Public Announcements
+          </a>
+        {% else %}
+          <a href="{% url 'dashboard_announcements' %}" class="btn btn-outline-primary">
+            ← Back to Institution Announcements
+          </a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,121 @@
+{% extends 'base.html' %}
+{% block title %}Manage Institutions{% endblock %}
+{% block content %}
+<div class="container mt-5">
+  <h1>Manage Institutions</h1>
+  {% if request.user.profile.role in "system_owner system_admin" %}
+    <a href="{% url 'create_institution' %}" class="btn btn-primary mb-3">Create New Institution</a>
+  {% endif %}
+
+  <div class="row">
+    <!-- Left Column: Institution Table -->
+    <div class="col-lg-8">
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Rekognisi</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for institution in institutions %}
+          <tr>
+            <td>{{ institution.name }}</td>
+            <td>
+                <small>{{ institution.get_klaster_pt_display }}</small><br>
+                <small>{{ institution.get_akreditasi_display }}</small>
+            </td>
+            <td>
+              <a href="{% url 'institution_profile' institution.id %}" class="btn btn-info btn-sm mb-1">View</a>
+              <a href="{% url 'update_institution' institution.id %}" class="btn btn-warning btn-sm mb-1">Edit</a>
+              {% if request.user.profile.role in "system_owner system_admin" %}
+                <a href="{% url 'delete_institution' institution.id %}" class="btn btn-danger btn-sm mb-1">Delete</a>
+              {% endif %}
+            </td>
+          </tr>
+          {% empty %}
+            <tr>
+              <td colspan="4">No institutions found.</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+
+      <!-- Pagination -->
+      {% if is_paginated %}
+        <nav>
+          <ul class="pagination justify-content-center">
+            {% if institutions.has_previous %}
+              <li class="page-item">
+                <a class="page-link" href="?search={{ search_query }}&klaster={{ klaster_filter }}&page={{ institutions.previous_page_number }}">Previous</a>
+              </li>
+            {% endif %}
+            {% for num in institutions.paginator.page_range %}
+              <li class="page-item {% if institutions.number == num %}active{% endif %}">
+                <a class="page-link" href="?search={{ search_query }}&klaster={{ klaster_filter }}&page={{ num }}">{{ num }}</a>
+              </li>
+            {% endfor %}
+            {% if institutions.has_next %}
+              <li class="page-item">
+                <a class="page-link" href="?search={{ search_query }}&klaster={{ klaster_filter }}&page={{ institutions.next_page_number }}">Next</a>
+              </li>
+            {% endif %}
+          </ul>
+        </nav>
+        <div class="text-center">
+          <a href="?search={{ search_query }}&klaster={{ klaster_filter }}&show=all" class="btn btn-sm btn-outline-secondary">Show All</a>
+        </div>
+      {% elif request.GET.show == 'all' %}
+        <div class="text-center mt-3">
+          <a href="?search={{ search_query }}&klaster={{ klaster_filter }}" class="btn btn-sm btn-outline-secondary">Paginate</a>
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- Right Column: Filter Sidebar -->
+    <div class="col-lg-4">
+      <div class="card">
+        <div class="card-header">Filter Institutions</div>
+        <div class="card-body">
+          <form method="get" action="{% url 'institution_manage_list' %}">
+            <div class="mb-3">
+              <label for="institution_search" class="form-label">Search by Name</label>
+              <input type="text" class="form-control" id="institution_search" name="search" value="{{ request.GET.search }}">
+            </div>
+            <div class="mb-3">
+              <label for="klaster" class="form-label">Filter by Klaster</label>
+              <select name="klaster" class="form-select" id="klaster">
+                <option value="">All</option>
+                <option value="mandiri" {% if klaster_filter == "mandiri" %}selected{% endif %}>Mandiri</option>
+                <option value="utama" {% if klaster_filter == "utama" %}selected{% endif %}>Utama</option>
+                <option value="madya" {% if klaster_filter == "madya" %}selected{% endif %}>Madya</option>
+                <option value="pratama" {% if klaster_filter == "pratama" %}selected{% endif %}>Pratama</option>
+                <option value="binaan" {% if klaster_filter == "binaan" %}selected{% endif %}>Binaan</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label for="akreditasi" class="form-label">Filter by Akreditasi</label>
+              <select name="akreditasi" class="form-select" id="akreditasi">
+                <option value="">All</option>
+                <option value="internasional" {% if akreditasi_filter == "internasional" %}selected{% endif %}>Internasional</option>
+                <option value="unggul" {% if akreditasi_filter == "unggul" %}selected{% endif %}>Unggul</option>
+                <option value="baik_sekali" {% if akreditasi_filter == "baik_sekali" %}selected{% endif %}>Baik Sekali</option>
+                <option value="baik" {% if akreditasi_filter == "baik" %}selected{% endif %}>Baik</option>
+                <option value="a" {% if akreditasi_filter == "a" %}selected{% endif %}>A</option>
+                <option value="b" {% if akreditasi_filter == "b" %}selected{% endif %}>B</option>
+                <option value="c" {% if akreditasi_filter == "c" %}selected{% endif %}>C</option>
+                <option value="Tidak Terakreditasi" {% if akreditasi_filter == "Tidak Terakreditasi" %}selected{% endif %}>Tidak Terakreditasi</option>
+              </select>
+            </div>
+            <div class="d-grid gap-2">
+              <button type="submit" class="btn btn-primary">Apply Filters</button>
+              <a href="{% url 'institution_manage_list' %}" class="btn btn-outline-secondary">Reset Filters</a>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% block title %}Delete Footer Column{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+  <h1>Delete Footer Column</h1>
+  <p>Are you sure you want to delete the footer column "{{ column.title }}"?</p>
+  <form method="post">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-danger">Yes, Delete</button>
+    <a href="{% url 'footer_column_list' %}" class="btn btn-secondary">Cancel</a>
+  </form>
+</div>
+{% endblock %}

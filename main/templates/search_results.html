@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+{% block title %}Search Results{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+  <h1>Search Results for "{{ query }}"</h1>
+  
+  <hr>
+  <h2>Profiles</h2>
+  {% if profiles %}
+    <ul class="list-group">
+      {% for p in profiles %}
+        <li class="list-group-item">
+          <a href="{% url 'profile_detail' p.user.id %}">
+            {{ p.nama_lengkap|default:p.user.username }}
+          </a>
+          <br>
+          <small>{{ p.user.email }}</small>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>No profiles found.</p>
+  {% endif %}
+  
+  <hr>
+  <h2>Institutions</h2>
+  {% if institutions %}
+    <ul class="list-group">
+      {% for inst in institutions %}
+        <li class="list-group-item">
+          <a href="{% url 'institution_profile' inst.id %}">
+            {{ inst.name }}
+          </a>
+          <br>
+          <small>{{ inst.address }}</small>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>No institutions found.</p>
+  {% endif %}
+  
+  <hr>
+  <h2>Study Programs</h2>
+  {% if programstudi %}
+    <ul class="list-group">
+      {% for ps in programstudi %}
+        <li class="list-group-item">
+          <a href="{% url 'programstudi_detail' ps.id %}">
+            {{ ps.nama_program_studi }}
+          </a>
+          <br>
+          <small>{{ ps.jenjang }}</small>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>No study programs found.</p>
+  {% endif %}
+  
+  <hr>
+  <h2>Research Grants</h2>
+  {% if researchgrant %}
+    <ul class="list-group">
+      {% for grant in researchgrant %}
+        <li class="list-group-item">
+          <a href="{% url 'research_grant_detail' grant.id %}">
+            {{ grant.title }}
+          </a>
+          <br>
+          <small>{{ grant.start_year }} - {{ grant.end_year }}</small>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>No research grants found.</p>
+  {% endif %}
+</div>
+{% endblock %}

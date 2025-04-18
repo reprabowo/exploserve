@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% block title %}{{ grant.title }} - Detail{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+  <h1>{{ grant.title }}</h1>
+  <p><strong>Description:</strong> {{ grant.description }}</p>
+  <p><strong>Offered To:</strong> {{ grant.get_offered_to_display }}</p>
+  <p><strong>Period:</strong> {{ grant.start_year }} - {{ grant.end_year }}</p>
+  <p><strong>Qualification Criteria:</strong> {{ grant.qualification_criteria }}</p>
+  <hr>
+  <h2>Components</h2>
+  <p><strong>Identitas Usulan:</strong> {{ grant.identitas_usulan }}</p>
+  <p><strong>Substansi dan Luaran:</strong> {{ grant.substansi_dan_luaran }}</p>
+  <p><strong>RAB:</strong> {{ grant.rab }}</p>
+  <p><strong>Dokumen Pendukung:</strong>
+    {% if grant.dokumen_pendukung %}
+      <a href="{{ grant.dokumen_pendukung.url }}" target="_blank">View Document</a>
+    {% else %}
+      N/A
+    {% endif %}
+  </p>
+  <p><strong>Konfirmasi Usulan:</strong> {{ grant.konfirmasi_usulan }}</p>
+  <hr>
+  <h2>Approval &amp; Review</h2>
+  <p><strong>Approved by Pimpinan PT:</strong> {{ grant.approved_by_pt }}</p>
+  <p><strong>Approved by Unit Pengelola PPM:</strong> {{ grant.approved_by_ppm }}</p>
+  <p><strong>Assigned Reviewer:</strong> {% if grant.reviewer %}{{ grant.reviewer.username }}{% else %}Not Assigned{% endif %}</p>
+  <p><strong>Review Score:</strong> {{ grant.review_score }}</p>
+  <p><strong>Final Decision:</strong> {{ grant.final_decision }}</p>
+  <p><strong>Announcement:</strong> {{ grant.announcement }}</p>
+  <hr>
+  <a href="{% url 'research_grant_list' %}" class="btn btn-secondary">Back to Research Grants</a>
+</div>
+{% endblock %}

@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% block title %}Research Grants{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+  <h1>Research Grants</h1>
+  <a href="{% url 'create_research_grant' %}" class="btn btn-primary mb-3">Create New Research Grant</a>
+  <table class="table table-bordered">
+    <thead>
+      <tr>
+        <th>Title</th>
+        <th>Offered To</th>
+        <th>Period</th>
+        <th>Created By</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for grant in grants %}
+      <tr>
+        <td><a href="{% url 'research_grant_detail' grant.id %}">{{ grant.title }}</a></td>
+        <td>{{ grant.get_offered_to_display }}</td>
+        <td>{{ grant.start_year }} - {{ grant.end_year }}</td>
+        <td>{{ grant.created_by.username }}</td>
+        <td>
+          <a href="{% url 'update_research_grant' grant.id %}" class="btn btn-warning btn-sm">Edit</a>
+          <a href="{% url 'delete_research_grant' grant.id %}" class="btn btn-danger btn-sm">Delete</a>
+        </td>
+      </tr>
+      {% empty %}
+      <tr>
+        <td colspan="5">No research grants available.</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <a href="{% url 'dashboard' %}" class="btn btn-secondary">Back to Dashboard</a>
+</div>
+{% endblock %}

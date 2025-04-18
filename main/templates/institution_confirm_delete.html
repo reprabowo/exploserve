@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% block title %}Confirm Delete{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1>Confirm Delete</h1>
+    <p>Are you sure you want to delete institution "{{ institution.name }}"?</p>
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger">Yes, Delete</button>
+        <a href="{% url 'institution_profile' institution.id %}" class="btn btn-secondary">Cancel</a>
+    </form>
+</div>
+{% endblock %}

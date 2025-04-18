@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+{% block title %}ExploServe - Home{% endblock %}
+
+{% block content %}
+  <div class="text-center mt-5">
+      <div style="min-height: 400px; display: flex; align-items: center; justify-content: center; flex-direction: column;" class="mt-auto mb-auto">
+        <h1 class="display-4">Selamat Datang di Aplikasi ExploServe</h1>
+        <p class="lead">Platform terintegrasi pengelolaan Riset dan Pengabdian pada Masyarakat.</p>
+        {% if not user.is_authenticated %}
+          <a href="{% url 'login' %}" class="btn btn-primary btn-lg">Login</a>
+        {% else %}
+          <div class="d-flex gap-2">
+            <a href="{% url 'dashboard' %}" class="btn btn-success btn-lg">Dashboard</a>
+            <form action="{% url 'logout' %}" method="post" class="d-inline">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-danger btn-lg">Logout</button>
+            </form>
+          </div>
+        {% endif %}
+      </div>
+
+       <!-- Latest Announcements Section -->
+      {% if announcements %}
+      <h3 class="mt-4 mb-4">Pengumuman Terkini</h3>
+      <div class="row">
+        {% for announcement in announcements %}
+          <div class="col-12 col-md-6 col-lg-4 mb-4">
+            <div class="card h-100">
+              {% if announcement.image %}
+                <img src="{{ announcement.image.url }}" class="card-img-top" alt="{{ announcement.title }}">
+              {% endif %}
+              <div class="card-body">
+                <h5 class="card-title">{{ announcement.title }}</h5>
+                <p class="card-text">{{ announcement.content|truncatewords:20|safe }}</p>
+                <a href="{% url 'announcement_detail' announcement.id %}" class="btn btn-primary">Read More</a>
+              </div>
+            </div>
+          </div>
+        {% empty %}
+          <div class="col-12">
+            <p>No announcements available at this time.</p>
+          </div>
+        {% endfor %}
+      </div>
+      <p>
+        <a class="btn btn-primary" href="{% url 'announcement_public_list' %}">Arsip Pengumuman</a>
+      </p>
+    {% endif %}
+  </div>
+{% endblock %}
+
+{% block footer %}
+  <footer class="bg-light">
+    <div class="container py-4">
+      <div class="row">
+        {% for column in footer_columns %}
+          <div class="col-12 col-md-6 col-lg-3 text-left">
+            <h5>{{ column.title }}</h5>
+            <p>{{ column.content|safe }}</p>
+          </div>
+        {% endfor %}
+      </div>
+      <hr>
+      <div class="row">
+        <div class="col-lg-12">
+          <small>
+            © {% now "Y" %} ExploServe. <br>Developed by Romanus Edy Prabowo using Python and Django.<br>
+            The theme uses Bootswatch Sandstone (code by <a href="https://github.com/thomaspark/bootswatch/blob/master/LICENSE" rel="nofollow">Thomas Park</a>) based on <a href="https://getbootstrap.com/" rel="nofollow">Bootstrap</a>.<br>
+            Icons from <a href="https://icons.getbootstrap.com/" rel="nofollow">Bootstrap Icons</a> and web fonts from <a href="https://fonts.google.com/" rel="nofollow">Google</a>.
+          </small>
+        </div>        
+      </div>
+    </div>
+  </footer>
+{% endblock %}

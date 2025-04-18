@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+{% block title %}{{ action }} Announcement{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+  <h1>{{ action }} Announcement</h1>
+  <form method="post" enctype="multipart/form-data"
+        data-role="{{ request.user.profile.role }}"
+        data-institution-id="{{ request.user.profile.institution.id }}">
+    {% csrf_token %}
+
+    {# 1 Show form errors #}
+    {% if form.errors %}
+      <div class="alert alert-danger">
+        <strong>Fix these errors:</strong>
+        <ul class="mb-0">
+          {% for field in form %}
+            {% for err in field.errors %}
+              <li>{{ field.label }}: {{ err }}</li>
+            {% endfor %}
+          {% endfor %}
+          {% for err in form.non_field_errors %}
+            <li>{{ err }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+    {% endif %}
+
+    {# 2 Render the form fields #}
+    {{ form.as_p }}
+
+    {# 3 Hidden field always posted, synced by JS #}
+    <input
+      type="hidden"
+      id="hidden_institution"
+      name="{{ form.institution.html_name }}"
+      value="{{ form.instance.institution.id|default:'' }}"
+    >
+
+    {# 4 New file uploads #}
+    <h5>Upload Additional File Attachments</h5>
+    <input type="file" name="attachment_files" multiple class="form-control mb-3">
+
+    <button type="submit" class="btn btn-success">{{ action }}</button>
+  </form>
+
+  {# 5 Existing attachments on “Update” #}
+  {% if action == "Update" and announcement %}
+    <h5 class="mt-4">Existing Attachments</h5>
+    <ul class="list-group mb-5">
+      {% for f in announcement.files.all %}
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+          <a href="{{ f.file.url }}" target="_blank">{{ f.file.name }}</a>
+          <form method="post" action="{% url 'delete_attachment_file' f.id %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+          </form>
+        </li>
+      {% empty %}
+        <li class="list-group-item">No files attached.</li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener("DOMContentLoaded", function(){
+  const form        = document.querySelector("form[data-role]");
+  const userRole    = form.dataset.role;
+  const instId      = form.dataset.institutionId;
+  const radios      = form.querySelectorAll('input[name="audience"]');
+  const selectInst  = form.querySelector('#institution-field');
+  const hiddenInst  = document.getElementById('hidden_institution');
+
+  function syncHidden() {
+    hiddenInst.value = selectInst.value;
+  }
+
+  function toggle() {
+    const aud = form.querySelector('input[name="audience"]:checked').value;
+    if (aud === "sitewide") {
+      selectInst.value = "";
+      hiddenInst.value = "";
+      selectInst.disabled = true;
+    } else {
+      if (userRole !== "institution_admin") {
+        selectInst.disabled = false;
+        syncHidden();
+      } else {
+        selectInst.value = instId;
+        hiddenInst.value = instId;
+        selectInst.disabled = true;
+      }
+    }
+  }
+
+  radios.forEach(r => r.addEventListener("change", toggle));
+  selectInst.addEventListener("change", syncHidden);
+  toggle();
+});
+</script>
+{% endblock %}

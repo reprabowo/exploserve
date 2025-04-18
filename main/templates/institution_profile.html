@@ -1,0 +1,217 @@
+{% extends 'base.html' %}
+{% block title %}{{ institution.name }} - Profile{% endblock %}
+
+{% block extra_css %}
+<style>
+  a {
+    text-decoration: none !important;
+  }
+  .institution-logo {
+    max-width: 150px;
+    max-height: 150px;
+    margin: 10px;
+  }
+  .google-map {
+    width: 100%;
+    height: 400px;
+    border: 0;
+  }
+  /* Optional: spacing adjustments within card bodies */
+  .card-body p {
+    margin-bottom: 1rem;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+  <!-- First Row: Title & Logo -->
+  <div class="row align-items-center mb-4">
+    <!-- Left: Title -->
+    <div class="col-md-8 text-center text-md-start">
+      <h1>{{ institution.name }}</h1>
+    </div>
+
+    <!-- Right: Logo -->
+    <div class="col-md-4 text-center text-md-end">
+      {% if institution.logo %}
+        <img src="{{ institution.logo.url }}" alt="{{ institution.name }} Logo" class="img-fluid institution-logo">
+      {% else %}
+        <img src="/static/images/default_logo.png" alt="Default Logo" class="img-fluid institution-logo">
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Second Row: Three Cards -->
+  <div class="row mb-4">
+    <!-- Card 1: Institution Details Part 1 -->
+    <div class="col-lg-4 mb-4">
+      <div class="card h-100 bg-light mb-3">
+        <div class="card-body">
+          <p><strong>Description:</strong><br>{{ institution.description }}</p>
+          <p><strong>Website:</strong><br>
+            {% if institution.website %}
+              <a href="{{ institution.website }}" target="_blank" style="text-decoration: none;">{{ institution.website }}</a>
+            {% else %}
+              N/A
+            {% endif %}
+          </p>
+          <p><strong>PT ID:</strong><br>{{ institution.pt_id }}</p>
+          <p><strong>Akreditasi:</strong><br>{{ institution.get_akreditasi_display }}</p>
+          <p><strong>Klaster PT:</strong><br>{{ institution.get_klaster_pt_display }}</p>
+          <p>
+            <strong>Sinta ID:</strong><br>
+            {% if institution.sinta_id %}
+              <a href="https://sinta.kemdikbud.go.id/affiliations/profile/{{ institution.sinta_id }}" target="_blank">{{ institution.sinta_id }}</a>
+            {% else %}
+              N/A
+            {% endif %}
+          </p>
+            <strong>Sinta Scores:</strong>
+            <div class="row gx-0 mt-1">
+              <div class="col-3" style="text-align: center;">
+                <span class="btn btn-info w-100 me-1">{{ institution.sinta_score }}</span>
+                <span class="text-body-tertiary"><small>Overall</small></span>
+              </div>
+              <div class="col-3" style="text-align: center;">
+                <span class="btn btn-info w-100 ms-1">{{ institution.sinta_score3 }}</span>
+                <span class="text-body-tertiary"><small>3 Years</small></span>
+              </div>
+            </div>
+        </div>
+      </div>
+    </div>
+    <!-- Card 2: Institution Details Part 2 -->
+    <div class="col-lg-4 mb-4">
+      <div class="card h-100">
+        <div class="card-body">
+          <p><strong>Nama Pimpinan PT:</strong><br>{{ institution.nama_pimpinan_pt }}</p>
+          <p><strong>Sebutan Pimpinan PT:</strong><br>{{ institution.get_sebutan_pimpinan_pt_display }}</p>
+          <p><strong>NIDN Pimpinan PT:</strong><br>{{ institution.nidn_pimpinan_pt }}</p>
+          <p><strong>Nama Pimpinan Unit Pengelola PPM:</strong><br>{{ institution.nama_pimpinan_unit_ppm }}</p>
+          <p><strong>Nama Unit Pengelola PPM:</strong><br>{{ institution.nama_unit_ppm }}</p>
+          <p><strong>Sebutan Pimpinan Unit Pengelola PPM:</strong><br>{{ institution.sebutan_pimpinan_unit_ppm }}</p>
+          <p><strong>NIDN Pimpinan Unit Pengelola PPM:</strong><br>{{ institution.nidn_pimpinan_unit_ppm }}</p>
+        </div>
+      </div>
+    </div>
+    <!-- Card 3: Google Map & Address -->
+    <div class="col-lg-4 mb-4">
+      <div class="card h-100">
+        <div class="card-body d-flex flex-column">
+          {% if institution.address %}
+            <div class="mb-3">
+              <iframe class="google-map"
+                src="https://www.google.com/maps/embed/v1/place?key=AIzaSyB_bwLtf0C8IumnDO6t54YEYlPvzpxYjQM&amp;q={{ institution.name|urlencode }}+{{ institution.address|urlencode }}"
+                allowfullscreen>
+              </iframe>
+            </div>
+            <p><small>{{ institution.address }}</small></p>
+          {% else %}
+            <p>No address provided.</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Badan Penyelenggara -->
+  
+  <!-- Next Section: Study Programs & Affiliated Researchers -->
+  <hr>
+  <h3 class="mb-4">Study Programs & Affiliated Researchers</h3>
+
+  <!-- Search Filter -->
+  <div class="row mb-3">
+    <div class="col-12 mb-3">
+      <form method="get" class="mb-4">
+        <div class="input-group">
+          <input type="text" name="q" class="form-control" placeholder="Search by study program, or researcher" value="{{ request.GET.q }}">
+          <button type="submit" class="btn btn-outline-primary">Search</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  {% if query %}
+    <p class="text-muted">Showing results for "<strong>{{ query }}</strong>"</p>
+  {% endif %}
+
+<!-- Programs with Researchers -->
+{% for program, researchers in programs_with_researchers %}
+  <div class="row mb-4">
+    <!-- Left: Program Info -->
+    <div class="col-12 col-md-4 mb-3">
+      <div class="card h-100 bg-light">
+        <div class="card-body">
+          <h5 class="card-title">{{ program.nama_program_studi }}</h5>
+          <p class="card-text">
+            <strong>Jenjang:</strong> {{ program.jenjang }}<br>
+            <strong>Status:</strong> {{ program.status }}<br>
+            <strong>Akreditasi:</strong> {{ program.get_akreditasi_ps_display }}<br>
+            <strong>SINTA ID:</strong> {{ program.sinta_id }}<br>
+            <a href="{% url 'programstudi_detail' program.id %}" class="btn btn-sm btn-outline-primary mt-2">View Program Studi</a>
+          </p>
+        </div>
+        {% if program.institution and program.institution.logo %}
+        <img
+          src="{{ program.institution.logo.url }}"
+          alt="Institution Logo"
+          class="position-absolute"
+          style="top: 15px; right: 15px; width: 20%; height: auto;">
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Right: User Cards -->
+    <div class="col-12 col-md-8">
+      <div class="row">
+        {% for researcher in researchers %}
+          <div class="col-6 col-lg-4 col-xl-3 mb-3">
+            <div class="card h-100 text-center">
+              {% if researcher.profile_photo %}
+                <img src="{{ researcher.profile_photo.url }}" class="card-img-top img-fluid" style="height:175px; object-fit:cover;">
+              {% else %}
+                <img src="https://www.shutterstock.com/image-vector/avatar-gender-neutral-silhouette-vector-600nw-2470054311.jpg" class="card-img-top img-fluid" style="height:175px; object-fit:cover;">
+              {% endif %}
+              <div class="card-body d-flex flex-column p-2">
+                <h6 class="card-title mb-1">{{ researcher.nama_lengkap }}</h6>
+                <p class="card-text small">{% if researcher.gelar_depan %}{{ researcher.gelar_depan }}{% endif %} {% if researcher.gelar_belakang %}{{ researcher.gelar_belakang }}{% endif %}</p>
+                <a href="{% url 'profile_detail' researcher.user.id %}" class="btn btn-sm btn-outline-primary mt-auto w-auto mx-auto">View</a>
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+{% endfor %}
+
+<!-- Other Researchers -->
+{% if other_researchers %}
+  <hr>
+  <h3>Other Researchers (No Study Program Selected)</h3>
+  <div class="row g-2">
+    {% for researcher in other_researchers %}
+      <div class="col-6 col-md-4 col-lg-2 mb-3"> <!-- Use col-lg-2 for matching 'col-2' size -->
+        <div class="card h-100 text-center">
+          {% if researcher.profile_photo %}
+            <img src="{{ researcher.profile_photo.url }}" class="card-img-top img-fluid" style="height:150px; object-fit:cover;">
+          {% else %}
+            <img src="https://www.shutterstock.com/image-vector/avatar-gender-neutral-silhouette-vector-600nw-2470054311.jpg" class="card-img-top img-fluid" style="height:150px; object-fit:cover;">
+          {% endif %}
+          <div class="card-body p-2">
+            <h6 class="card-title mb-1">{{ researcher.nama_lengkap }}</h6>
+            <p class="card-text small">{% if researcher.gelar_depan %}{{ researcher.gelar_depan }}{% endif %} {% if researcher.gelar_belakang %}{{ researcher.gelar_belakang }}{% endif %}</p>
+            <a href="{% url 'profile_detail' researcher.user.id %}" class="btn btn-sm btn-outline-primary">View</a>
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+{% endif %}
+
+  
+  <a href="{% url 'institution_list' %}" class="btn btn-secondary mt-3">Back to Institution List</a>
+</div>
+{% endblock %}
