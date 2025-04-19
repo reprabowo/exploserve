@@ -280,6 +280,7 @@ class AnnouncementForm(forms.ModelForm):
             "image"
         ]
         widgets = {
+            "title": forms.TextInput(attrs={'class': 'form-control'}),
             'audience': forms.RadioSelect(),
             'content': forms.Textarea(attrs={'class': 'form-control', 'rows': 5}),
             'institution': forms.Select(attrs={'class': 'form-select', 'id': 'institution-field'}),

@@ -10,10 +10,10 @@
         data-institution-id="{{ request.user.profile.institution.id }}">
     {% csrf_token %}
 
-    {# 1 Show form errors #}
+    {# —————————————— Show validation errors —————————————— #}
     {% if form.errors %}
       <div class="alert alert-danger">
-        <strong>Fix these errors:</strong>
+        <strong>Please fix the errors below:</strong>
         <ul class="mb-0">
           {% for field in form %}
             {% for err in field.errors %}
@@ -27,20 +27,63 @@
       </div>
     {% endif %}
 
-    {# 2 Render the form fields #}
-    {{ form.as_p }}
+    {# —————————————— Title —————————————— #}
+    <div class="mb-3">
+      {{ form.title.label_tag }}
+      {{ form.title|add_class:"form-control" }}
+      {{ form.title.errors }}
+    </div>
 
-    {# 3 Hidden field always posted, synced by JS #}
-    <input
-      type="hidden"
-      id="hidden_institution"
-      name="{{ form.institution.html_name }}"
-      value="{{ form.instance.institution.id|default:'' }}"
-    >
+    {# —————————————— Audience —————————————— #}
+    <div class="mb-3">
+      {{ form.audience.label_tag }}
+      {{ form.audience }}
+      {{ form.audience.errors }}
+    </div>
 
-    {# 4 New file uploads #}
+    {# —————————————— Institution —————————————— #}
+    <div class="mb-3">
+      {{ form.institution.label_tag }}
+      {{ form.institution|add_class:"form-select" }}
+      {{ form.institution.errors }}
+    </div>
+
+    {# —————————————— Preview existing image —————————————— #}
+    {% if announcement and announcement.image %}
+      <div class="mb-3">
+        <img
+          src="{{ announcement.image.url }}"
+          alt="{{ announcement.title }} Image"
+          class="img-fluid"
+          style="max-width:150px;"
+        >
+      </div>
+    {% endif %}
+
+    {# —————————————— Image upload field —————————————— #}
+    <div class="mb-3">
+      {{ form.image.label_tag }}
+      {{ form.image|add_class:"form-control" }}
+      {{ form.image.errors }}
+    </div>
+
+    {# —————————————— Content —————————————— #}
+    <div class="mb-3">
+      {{ form.content.label_tag }}
+      {{ form.content|add_class:"form-control" }}
+      {{ form.content.errors }}
+    </div>
+
+    {# —————————————— New Attachments —————————————— #}
     <h5>Upload Additional File Attachments</h5>
-    <input type="file" name="attachment_files" multiple class="form-control mb-3">
+    <div class="mb-3">
+      <input 
+        type="file"
+        name="attachment_files"
+        multiple
+        class="form-control"
+      >
+    </div>
 
     <button type="submit" class="btn btn-success">{{ action }}</button>
   </form>

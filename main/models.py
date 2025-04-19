@@ -1,6 +1,8 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.utils.translation import gettext_lazy as _
+from django.utils import timezone
+import os, uuid
 # Make sure you have imported Institution and ProgramStudi if used below
 
 
@@ -109,6 +111,17 @@ class ProgramStudi(models.Model):
     def __str__(self):
         return self.nama_program_studi
 
+
+def profile_photo_upload_path(instance, filename):
+    """
+    Rename profile photos to:
+      MEDIA_ROOT/profiles/photos/user_<user_id>_<timestamp>.<ext>
+    """
+    ext = filename.split('.')[-1].lower()
+    ts  = timezone.now().strftime("%Y%m%d%H%M%S")
+    name = f"user_{instance.user.id}_{ts}.{ext}"
+    return os.path.join("profiles", "photos", name)
+
 class Profile(models.Model):
     ROLE_CHOICES = [
         ('system_owner', _('System Owner')),
@@ -161,14 +174,15 @@ class Profile(models.Model):
     
     # Profile photo field
     profile_photo = models.ImageField(
-        upload_to='profiles/photos/', 
+        upload_to=profile_photo_upload_path, 
         blank=True, 
         null=True, 
-        verbose_name=_("Profile Photo")
+        verbose_name=_("Profile Photo")    
     )
     
     def __str__(self):
         return f"{self.user.username} Profile"
+
 
 class ResearchGrant(models.Model):
     OFFERED_TO_CHOICES = [
@@ -215,6 +229,29 @@ class FooterColumn(models.Model):
 
     def __str__(self):
         return self.title
+    
+    
+def announcement_file_upload_path(instance, filename):
+    """
+    Rename announcement attachments to:
+      MEDIA_ROOT/announcements/files/announcement_<announcement_id>_<uuid>.<ext>
+    """
+    ext = filename.split('.')[-1].lower()
+    uid = uuid.uuid4().hex
+    name = f"announcement_{instance.announcement.id}_{uid}.{ext}"
+    return os.path.join("announcements", "files", name)
+
+def announcement_image_upload_path(instance, filename):
+    """
+    Rename uploaded announcement images to:
+      MEDIA_ROOT/announcements/images/announcement_<uuid>_<timestamp>.<ext>
+    """
+    ext = os.path.splitext(filename)[1].lower()                # “.jpg”, “.png”, etc
+    ts  = timezone.now().strftime("%Y%m%d%H%M%S")               # e.g. “20250416…”
+    uid = uuid.uuid4().hex                                      # e.g. “9f1c…”  
+    pk  = instance.id if instance.id else uid
+    new_name = f"announcement_{pk}_{ts}{ext}"
+    return os.path.join("announcements", "images", new_name)
 
 class Announcement(models.Model):
     AUDIENCE_CHOICES = [
@@ -229,7 +266,12 @@ class Announcement(models.Model):
         verbose_name="Audience"
     )
     content = models.TextField(verbose_name="Content")
-    image = models.ImageField(upload_to='announcements/images/', blank=True, null=True, verbose_name="Image Attachment")
+    image = models.ImageField(
+        upload_to=announcement_image_upload_path, 
+        blank=True, 
+        null=True, 
+        verbose_name="Image Attachment"
+    )
     institution = models.ForeignKey(
         Institution,
         on_delete=models.SET_NULL,
@@ -252,7 +294,7 @@ class AnnouncementFile(models.Model):
         related_name='files',
         verbose_name="Announcement"
     )
-    file = models.FileField(upload_to='announcements/files/', verbose_name="File Attachment")
+    file = models.FileField(upload_to=announcement_file_upload_path, verbose_name="File Attachment")
     
     def __str__(self):
         return f"File for {self.announcement.title}"
