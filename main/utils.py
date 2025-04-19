@@ -1,8 +1,9 @@
 import requests
 from bs4 import BeautifulSoup
 import re
+from difflib import SequenceMatcher
 
-def fetch_sinta_scores(sinta_id):
+def fetch_sinta_scores(sinta_id, local_name = None, threshold = 0.8):
     """
     Given a SINTA ID, fetch the corresponding profile page from SINTA
     and return a tuple (first_score, second_score) where:
@@ -16,7 +17,7 @@ def fetch_sinta_scores(sinta_id):
         response.raise_for_status()
     except requests.RequestException as e:
         print("Error fetching SINTA page:", e)
-        return None, None, None, None
+        return None, None, None, None, None, False
 
     soup = BeautifulSoup(response.text, 'html.parser')
 
@@ -40,7 +41,24 @@ def fetch_sinta_scores(sinta_id):
                 third_score = cells[1].get_text(strip=True)
                 fourth_score = cells[2].get_text(strip=True)
 
-    return first_score, second_score, third_score, fourth_score
+    # scrape the “official” name in <h3><a>…</a></h3>
+    sinta_name = None
+    h3 = soup.find("h3")
+    if h3:
+        a = h3.find("a")
+        sinta_name = a.get_text(strip=True) if a else h3.get_text(strip=True)
+
+    # fuzzy compare
+    name_match = False
+    if local_name and sinta_name:
+        ratio = SequenceMatcher(
+            None,
+            local_name.lower().strip(),
+            sinta_name.lower().strip()
+        ).ratio()
+        name_match = (ratio >= threshold)
+
+    return first_score, second_score, third_score, fourth_score, sinta_name, name_match
 
 # Example usage in the Django shell:
 if __name__ == "__main__":

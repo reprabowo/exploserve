@@ -102,21 +102,29 @@ def edit_profile(request):
 
             # If SINTA ID is provided, fetch and update the SINTA scores.
             sinta_id = profile_obj.sinta_id
-            if sinta_id:
-                (
-                    first_score,
-                    second_score,
-                    third_score,
-                    fourth_score,
-                ) = fetch_sinta_scores(sinta_id)
-                if first_score:
-                    profile_obj.sinta_score = first_score
-                if second_score:
-                    profile_obj.sinta_score3 = second_score
-                if third_score:
-                    profile_obj.sinta_scoresc = third_score
-                if fourth_score:
-                    profile_obj.sinta_scorego = fourth_score
+            if sinta_id:(
+                first_score,
+                second_score,
+                third_score,
+                fourth_score,
+                scraped_name,
+                name_match) = fetch_sinta_scores(
+                    profile_obj.sinta_id,
+                    local_name = profile_obj.nama_lengkap
+                )
+            if first_score:
+                profile_obj.sinta_score = first_score
+            if second_score:
+                profile_obj.sinta_score3 = second_score
+            if third_score:
+                profile_obj.sinta_scoresc = third_score
+            if fourth_score:
+                profile_obj.sinta_scorego = fourth_score
+
+                # save scraped name & match flag
+                profile_obj.sinta_name_scraped = scraped_name
+                profile_obj.sinta_name_match   = bool(name_match)
+
                 profile_obj.save()
 
             update_session_auth_hash(request, user)

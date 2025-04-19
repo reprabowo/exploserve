@@ -56,6 +56,7 @@
               N/A
             {% endif %}
           </p>
+          {% if institution.name != 'Perkumpulan Pimpinan Akademika Vokasi Indonesia' %}
           <p><strong>PT ID:</strong><br>{{ institution.pt_id }}</p>
           <p><strong>Akreditasi:</strong><br>{{ institution.get_akreditasi_display }}</p>
           <p><strong>Klaster PT:</strong><br>{{ institution.get_klaster_pt_display }}</p>
@@ -78,6 +79,7 @@
                 <span class="text-body-tertiary"><small>3 Years</small></span>
               </div>
             </div>
+          {% endif %}
         </div>
       </div>
     </div>

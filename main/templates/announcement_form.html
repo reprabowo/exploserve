@@ -10,7 +10,7 @@
         data-institution-id="{{ request.user.profile.institution.id }}">
     {% csrf_token %}
 
-    {# —————————————— Show validation errors —————————————— #}
+    {# —————————————— Show validation errors #}
     {% if form.errors %}
       <div class="alert alert-danger">
         <strong>Please fix the errors below:</strong>
@@ -27,28 +27,36 @@
       </div>
     {% endif %}
 
-    {# —————————————— Title —————————————— #}
+    {# —————————————— Title #}
     <div class="mb-3">
       {{ form.title.label_tag }}
       {{ form.title|add_class:"form-control" }}
       {{ form.title.errors }}
     </div>
 
-    {# —————————————— Audience —————————————— #}
+    {# —————————————— Audience #}
     <div class="mb-3">
       {{ form.audience.label_tag }}
       {{ form.audience }}
       {{ form.audience.errors }}
     </div>
 
-    {# —————————————— Institution —————————————— #}
+    {# —————————————— Institution #}
     <div class="mb-3">
       {{ form.institution.label_tag }}
       {{ form.institution|add_class:"form-select" }}
       {{ form.institution.errors }}
     </div>
 
-    {# —————————————— Preview existing image —————————————— #}
+    {# hidden field always posted, synced by JS #}
+    <input
+      type="hidden"
+      id="hidden_institution"
+      name="{{ form.institution.html_name }}"
+      value="{{ form.instance.institution.id|default:'' }}"
+    >
+
+    {# —————————————— Preview existing image #}
     {% if announcement and announcement.image %}
       <div class="mb-3">
         <img
@@ -60,21 +68,21 @@
       </div>
     {% endif %}
 
-    {# —————————————— Image upload field —————————————— #}
+    {# —————————————— Image upload field #}
     <div class="mb-3">
       {{ form.image.label_tag }}
       {{ form.image|add_class:"form-control" }}
       {{ form.image.errors }}
     </div>
 
-    {# —————————————— Content —————————————— #}
+    {# —————————————— Content #}
     <div class="mb-3">
       {{ form.content.label_tag }}
       {{ form.content|add_class:"form-control" }}
       {{ form.content.errors }}
     </div>
 
-    {# —————————————— New Attachments —————————————— #}
+    {# —————————————— New Attachments #}
     <h5>Upload Additional File Attachments</h5>
     <div class="mb-3">
       <input 

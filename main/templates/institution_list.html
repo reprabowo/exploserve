@@ -31,9 +31,9 @@
                   <p  class="card-text flex-grow-1"><small>{{ institution.description|truncatewords:20 }}</small></p>
                   <a href="{% url 'institution_profile' institution.id %}" class="btn btn-primary mt-auto" style="align-self: flex-start">View Profile</a>
                   <span class="btn btn-success">{{ institution.get_akreditasi_display }}</span>
-                  <span class="btn btn-info">{{ institution.sinta_score }}</span>
-                  <span  class="btn btn-info">{{ institution.sinta_score3 }}</span>
-                  <span class="text-body-tertiary"><small>Overall and 3 Yrs SINTA Scores</small></span>
+                  {% if institution.sinta_score %}<span class="btn btn-info">{{ institution.sinta_score }}</span>{% endif %}
+                  {% if institution.sinta_score3 %}<span  class="btn btn-info">{{ institution.sinta_score3 }}</span>{% endif %}
+                  {% if institution.sinta_score and institution.sinta_score3 %}<span class="text-body-tertiary"><small>Overall and 3 Yrs SINTA Scores</small></span>{% endif %}
                 </div>
               </div>
             </div>
