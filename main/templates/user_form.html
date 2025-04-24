@@ -2,15 +2,19 @@
 {% load widget_tweaks %}
 {% block title %}Edit Profile{% endblock %}
 
+{% block extra_css %}
+  {{ block.super }}
+  <!-- any page‑specific CSS here -->
+{% endblock %}
+
 {% block content %}
 <div class="container mt-5">
   <h1>Edit Profile</h1>
   <form method="post" enctype="multipart/form-data">
     {% csrf_token %}
 
-    <!-- User Info -->
-    <div class="mb-3">
-      <fieldset class="border p-3 mb-4">
+    <!-- USER INFORMATION -->
+      <fieldset class="card bg-light p-3 mb-4" style="border:0px;">
         <legend class="w-auto">User Information</legend>
         {% for field in user_form %}
         <div class="mb-3">
@@ -18,18 +22,18 @@
           {{ field|add_class:"form-control" }}
           {{ field.errors }}
           {% if field.name == "password" %}
-            <small class="form-text text-muted">Leave blank to keep the existing password.</small>
+            <small class="form-text text-muted">
+              Leave blank to keep your current password.
+            </small>
           {% endif %}
         </div>
         {% endfor %}
       </fieldset>
-    </div>
 
     <!-- Profile Info -->
     <div class="mb-3">
-      <fieldset class="border p-3 mb-4">
+      <fieldset class="card bg-light p-3 mb-4" style="border:0px;">
         <legend class="w-auto">Profile Information</legend>
-        
         {% for field in profile_form %}
         <div class="mb-3">
 
@@ -37,7 +41,9 @@
             {{ field.label_tag }}
             {% if request.user.profile.role in "institution_admin researcher reviewer student technician" %}
               {{ field|attr:"disabled:disabled"|add_class:"form-control" }}
-              <input type="hidden" name="{{ field.html_name }}" value="{{ field.value|default_if_none:'' }}">
+              <input type="hidden" 
+					 name="{{ field.html_name }}" 
+					 value="{{ field.value|default_if_none:'' }}">
             {% else %}
               {{ field|add_class:"form-control" }}
             {% endif %}
@@ -47,7 +53,10 @@
             {{ field.label_tag }}
             {% if profile_form.instance.profile_photo %}
             <div class="mb-2">
-              <img src="{{ profile_form.instance.profile_photo.url }}" alt="{{ user_form.instance.username }}'s Photo" class="img-thumbnail" style="max-width:150px;">
+              <img src="{{ profile_form.instance.profile_photo.url }}" 
+				   alt="{{ user_form.instance.username }}'s Photo" 
+				   class="img-thumbnail" 
+				   style="max-width:150px;">
             </div>
             {% endif %}
             {{ field|add_class:"form-control" }}
@@ -55,15 +64,19 @@
 
             {% elif field.name == "is_reviewer_assigned" %}
             <div class="form-check form-switch">
-              <input type="checkbox" class="form-check-input"
+              <input type="checkbox" 
+					 class="form-check-input"
                      id="{{ field.id_for_label }}"
                      name="{{ field.html_name }}"
                      {% if field.value %}checked{% endif %}
-                     {% if request.user.profile.role not in "system_owner system_admin institution_admin" %}disabled{% endif %}>
-              <label class="form-check-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
-            </div>
+                     {% if request.user.profile.role not in "system_owner system_admin institution_admin" %}
+					 disabled
+					 {% endif %}>
+              <label class="form-check-label" for="{{ field.id_for_label }}">
+				{{ field.label }}
+			  </label>
+			  </div>
             {{ field.errors }}
-          
 
           {% else %}
             {{ field.label_tag }}
@@ -83,28 +96,33 @@
 {% endblock %}
 
 {% block extra_js %}
-  <script>
-    $(function(){
-      $('#id_institution').on('change', function(){
-        var instId = $(this).val(),
-            $prog  = $('#id_program_studi'),
-            url    = "{% url 'ajax_load_programs' %}";
+<script>
+  $(function(){
+    var $inst = $('#id_institution'),
+        $prog = $('#id_program_studi'),
+        url   = "{% url 'ajax_load_programs' %}";
 
-        if (!instId) {
-          $prog.html('<option value="">---------</option>');
-          return;
-        }
-
-        $.getJSON(url, { institution: instId }, function(data){
-          console.log(data);  // <-- inspect in your browser console: you should see [{"id":…,"name":…},…]
-          var options = '<option value="">---------</option>';
-          data.forEach(function(o){
-            options += '<option value="'+ o.id +'">'+ o.name +'</option>';
-          });
-          $prog.html(options);
+    function loadPrograms(){
+      var instId = $inst.val();
+      if (!instId) {
+        $prog.html('<option value="">---------</option>');
+        return;
+      }
+      $.getJSON(url, { institution: instId }, function(data){
+        var options = '<option value="">---------</option>';
+        $.each(data, function(i, obj){
+          options += '<option value="'+ obj.id +'">'+ obj.name +'</option>';
         });
+        $prog.html(options);
       });
-    });
-  </script>
+    }
+
+    // 1) bind to change
+    $inst.on('change', loadPrograms);
+    // 2) also immediately call once on page‐load
+    loadPrograms();
+  });
+</script>
 {% endblock %}
+
 

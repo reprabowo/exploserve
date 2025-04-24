@@ -82,4 +82,3 @@ def can_delete_user(manager, target):
 
     # Other roles cannot delete
     return False
-

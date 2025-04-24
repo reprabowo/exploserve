@@ -17,7 +17,7 @@ def fetch_sinta_scores(sinta_id, local_name = None, threshold = 0.8):
         response.raise_for_status()
     except requests.RequestException as e:
         print("Error fetching SINTA page:", e)
-        return None, None, None, None, None, False
+        return None, None, None, None, "", False
 
     soup = BeautifulSoup(response.text, 'html.parser')
 
@@ -42,7 +42,7 @@ def fetch_sinta_scores(sinta_id, local_name = None, threshold = 0.8):
                 fourth_score = cells[2].get_text(strip=True)
 
     # scrape the “official” name in <h3><a>…</a></h3>
-    sinta_name = None
+    sinta_name = ""
     h3 = soup.find("h3")
     if h3:
         a = h3.find("a")

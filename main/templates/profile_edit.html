@@ -31,6 +31,7 @@
     </fieldset>
 
     <!-- PROFILE INFORMATION -->
+	
     <fieldset class="border p-3 mb-4">
       <legend class="w-auto">Profile Information</legend>
       {% for field in profile_form %}
@@ -53,8 +54,9 @@
             {% if profile_form.instance.profile_photo %}
               <div class="mb-2">
                 <img src="{{ profile_form.instance.profile_photo.url }}"
-                     class="img-thumbnail" style="max-width:200px;"
-                     alt="{{ user_form.instance.username }}'s photo">
+                    class="img-thumbnail" 
+					          style="max-width:150px;"
+                    alt="{{ user_form.instance.username }}'s photo">
               </div>
             {% endif %}
             {{ field|add_class:"form-control" }}
@@ -68,11 +70,10 @@
                      name="{{ field.html_name }}"
                      {% if field.value %}checked{% endif %}
                      {% if request.user.profile.role not in "system_owner system_admin institution_admin" %}
-                       disabled
+					 disabled
                      {% endif %}>
-              <label class="form-check-label"
-                     for="{{ field.id_for_label }}">
-                {{ field.label }}
+              <label class="form-check-label" for="{{ field.id_for_label }}">
+				{{ field.label }}
               </label>
             </div>
             {{ field.errors }}
@@ -87,6 +88,7 @@
       {% endfor %}
     </fieldset>
 
+
     <button type="submit" class="btn btn-primary">Save Changes</button>
     <a href="{% url 'profile_detail' %}" class="btn btn-secondary">Cancel</a>
   </form>
@@ -94,28 +96,33 @@
 {% endblock %}
 
 {% block extra_js %}
-  <script>
-    $(function(){
-      $('#id_institution').on('change', function(){
-        var instId = $(this).val(),
-            $prog  = $('#id_program_studi'),
-            url    = "{% url 'ajax_load_programs' %}";
+<script>
+  $(function(){
+    var $inst = $('#id_institution'),
+        $prog = $('#id_program_studi'),
+        url   = "{% url 'ajax_load_programs' %}";
 
-        if (!instId) {
-          $prog.html('<option value="">---------</option>');
-          return;
-        }
-
-        $.getJSON(url, { institution: instId }, function(data){
-          console.log(data);  // <-- inspect in your browser console: you should see [{"id":…,"name":…},…]
-          var options = '<option value="">---------</option>';
-          data.forEach(function(o){
-            options += '<option value="'+ o.id +'">'+ o.name +'</option>';
-          });
-          $prog.html(options);
+    function loadPrograms(){
+      var instId = $inst.val();
+      if (!instId) {
+        $prog.html('<option value="">---------</option>');
+        return;
+      }
+      $.getJSON(url, { institution: instId }, function(data){
+        var options = '<option value="">---------</option>';
+        $.each(data, function(i, obj){
+          options += '<option value="'+ obj.id +'">'+ obj.name +'</option>';
         });
+        $prog.html(options);
       });
-    });
-  </script>
+    }
+
+    // 1) bind to change
+    $inst.on('change', loadPrograms);
+    // 2) also immediately call once on page‐load
+    loadPrograms();
+  });
+</script>
 {% endblock %}
+
 

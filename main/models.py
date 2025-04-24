@@ -132,7 +132,7 @@ class ProgramStudi(models.Model):
         ('D2', 'D2'),
         ('D1', 'D1'),
     ]
-    jenjang = models.CharField(max_length=10, choices=JENJANG_CHOICES, blank=True, null=True, verbose_name=_("Jenjang")    )
+    jenjang = models.CharField(max_length=10, choices=JENJANG_CHOICES, blank=True, null=True, verbose_name=_("Jenjang"))
 
     STATUS_CHOICES = [
         ('Aktif', 'Aktif'),
@@ -161,7 +161,6 @@ class ProgramStudi(models.Model):
     
     def __str__(self):
         return self.nama_program_studi
-
 
 
 class Profile(models.Model):
@@ -203,8 +202,28 @@ class Profile(models.Model):
     
     # Other researcher fields
     nidn_nidk = models.CharField(max_length=100, blank=True, null=True, verbose_name=_("NIDN/NIDK"))
-    jenjang_pendidikan = models.CharField(max_length=100, blank=True, null=True, verbose_name=_("Jenjang Pendidikan"))
-    jabatan_akademik = models.CharField(max_length=100, blank=True, null=True, verbose_name=_("Jabatan Akademik"))
+    
+    JENJANG_PENDIDIKAN_CHOICES = [
+        ('S3', 'S3'),
+        ('Sp-2', 'Sp-2'),
+        ('Sp-1', 'Sp-1'),
+        ('S2', 'S2'),
+        ('S1', 'S1'),
+        ('D4', 'D4'),
+        ('D3', 'D3'),
+        ('D2', 'D2'),
+        ('D1', 'D1'),
+    ]
+    jenjang_pendidikan = models.CharField(max_length=50, choices=JENJANG_PENDIDIKAN_CHOICES, blank=True, null=True, verbose_name=_("Jenjang Pendidikan"))
+ 
+    JABATAN_AKADEMIK_CHOICES = [
+        ('guru_besar', _('Guru Besar')),
+        ('lektor_kepala', _('Lektor Kepala')),
+        ('lektor', _('Lektor')),
+        ('asisten_ahli', _('Asisten Ahli')),
+        ('tenaga_pengajar', _('Tenaga Pengajar')),
+    ]
+    jabatan_akademik = models.CharField(max_length=50, choices=JABATAN_AKADEMIK_CHOICES, blank=True, null=True, verbose_name=_("Jabatan Akademik"))
     research_interest = models.TextField(blank=True, null=True, verbose_name=_("Research Interest"))
     sinta_id = models.CharField(max_length=100, blank=True, null=True, unique=True, verbose_name=_("Sinta ID"))
     sinta_score = models.CharField(max_length=100, blank=True, null=True, verbose_name=_("Sinta Score"))
@@ -213,7 +232,7 @@ class Profile(models.Model):
     sinta_scorego = models.CharField(max_length=100, blank=True, null=True, verbose_name=_("Sinta Score Google Scholar"))
     sinta_name_scraped = models.CharField(_("SINTA Name (scraped)"), max_length=255, blank=True, null=True)
     sinta_name_match = models.BooleanField(_("Name matches SINTA?"), default=False, help_text="True if local full name ≈ scraped SINTA-profile name")
-    orcid_id = models.CharField(max_length=100, blank=True, null=True, verbose_name=_("Orcid ID"))
+    orcid_id = models.URLField(blank=True, null=True, verbose_name=_("Orcid ID"))
     is_reviewer_assigned = models.BooleanField(default=False, verbose_name=_("Research Reviewer Assigned"))
     
     # Profile photo field
@@ -226,7 +245,6 @@ class Profile(models.Model):
     
     def __str__(self):
         return f"{self.user.username} Profile"
-
 
 
 class ResearchGrant(models.Model):
@@ -265,7 +283,6 @@ class ResearchGrant(models.Model):
         return self.title
 
 
-
 class FooterColumn(models.Model):
     title = models.CharField(max_length=255, verbose_name=_("Title"))
     content = models.TextField(verbose_name=_("Content"))
@@ -278,7 +295,6 @@ class FooterColumn(models.Model):
         return self.title
     
     
-
 class Announcement(models.Model):
     AUDIENCE_CHOICES = [
         ('sitewide', 'Sitewide'),
@@ -324,7 +340,6 @@ class AnnouncementFile(models.Model):
     
     def __str__(self):
         return f"File for {self.announcement.title}"
-
 
 
 # --- Before saving an Institution, if its logo fields have changed, delete the old ones ---

@@ -7,24 +7,37 @@ from .models import Profile, Institution, ProgramStudi, ResearchGrant, FooterCol
 
 class UserRegistrationForm(forms.ModelForm):
     password = forms.CharField(
-        widget=forms.PasswordInput, 
-        label=_("Password"), 
+        widget=forms.PasswordInput,
+        label=_("Password"),
         required=False
     )
-    
+
     class Meta:
         model = User
         fields = ['email', 'password']
         labels = {
             'email': _("Email"),
         }
-    
+
+    def clean_email(self):
+        email = self.cleaned_data['email']
+        qs = User.objects.filter(username__iexact=email)
+        # if we're editing an existing user, exclude them from the duplicate check
+        if self.instance and self.instance.pk:
+            qs = qs.exclude(pk=self.instance.pk)
+        if qs.exists():
+            raise forms.ValidationError(
+                _("A user with that email address already exists.")
+            )
+        return email
+
     def save(self, commit=True):
         user = super().save(commit=False)
-        # Automatically set the username to the email address.
-        # Alternatively, you could create a unique username by appending a random number.
+        # keep username in sync with email
         user.username = self.cleaned_data['email']
-        user.set_password(self.cleaned_data["password"])
+        # only set password if provided
+        if self.cleaned_data.get("password"):
+            user.set_password(self.cleaned_data["password"])
         if commit:
             user.save()
         return user
@@ -47,7 +60,9 @@ class ProfileForm(forms.ModelForm):
             'sinta_score',
             'sinta_score3', 
             'sinta_scoresc',
-            'sinta_scorego',        
+            'sinta_scorego',
+            'sinta_name_scraped',
+            'sinta_name_match',        
             'orcid_id',
             'is_reviewer_assigned',
             'no_hp',
@@ -69,6 +84,8 @@ class ProfileForm(forms.ModelForm):
             'sinta_score3': _("Sinta Score 3 Years"),
             'sinta_scoresc': _("Sinta Score Scopus"),
             'sinta_scorego': _("Sinta Score Google Scholar"),
+            'sinta_name_scraped': _("SINTA Name (scraped)"),
+            'sinta_name_match': _("Name matches SINTA?"),
             'orcid_id': _("Orcid ID"),
             'is_reviewer_assigned': _("Research Reviewer Assigned"),
             'no_hp': _("No HP"),
@@ -76,13 +93,17 @@ class ProfileForm(forms.ModelForm):
         }
         widgets = {
             'role': forms.Select(attrs={'class': 'form-select'}),
+            'jenjang_pendidikan': forms.Select(attrs={'class': 'form-select'}),
+            'jabatan_akademik': forms.Select(attrs={'class': 'form-select'}),
             'institution': forms.Select(attrs={'class': 'form-select', 'id':'id_institution'}),
             'program_studi':forms.Select(attrs={'class': 'form-select', 'id':'id_program_studi'}),
             # Make sinta_score read-only
-            'sinta_score': forms.TextInput(attrs={'readonly': 'readonly', 'class': 'form-control'}),
-            'sinta_score3': forms.TextInput(attrs={'readonly': 'readonly', 'class': 'form-control'}),
-            'sinta_scoresc': forms.TextInput(attrs={'readonly': 'readonly', 'class': 'form-control'}),
-            'sinta_scorego': forms.TextInput(attrs={'readonly': 'readonly', 'class': 'form-control'}),
+            'sinta_score': forms.TextInput(attrs={'readonly': 'readonly', 'class': 'form-control', 'disabled': 'disabled'}),
+            'sinta_score3': forms.TextInput(attrs={'readonly': 'readonly', 'class': 'form-control', 'disabled': 'disabled'}),
+            'sinta_scoresc': forms.TextInput(attrs={'readonly': 'readonly', 'class': 'form-control', 'disabled': 'disabled'}),
+            'sinta_scorego': forms.TextInput(attrs={'readonly': 'readonly', 'class': 'form-control', 'disabled': 'disabled'}),
+            'sinta_name_scraped': forms.TextInput(attrs={'readonly': 'readonly', 'class': 'form-control', 'disabled': 'disabled'}),
+            'sinta_name_match': forms.TextInput(attrs={'readonly': 'readonly', 'class': 'form-control', 'disabled': 'disabled'}),
         }
     
     def __init__(self, *args, **kwargs):
@@ -170,8 +191,8 @@ class InstitutionForm(forms.ModelForm):
             'akreditasi': forms.Select(attrs={'class': 'form-select'}),
             'sebutan_pimpinan_pt': forms.Select(attrs={'class': 'form-select'}),
             # Make sinta_score read-only
-            'sinta_score': forms.TextInput(attrs={'readonly': 'readonly', 'class': 'form-control'}),
-            'sinta_score3': forms.TextInput(attrs={'readonly': 'readonly', 'class': 'form-control'}),
+            'sinta_score': forms.TextInput(attrs={'readonly': 'readonly', 'class': 'form-control', 'disabled': 'disabled'}),
+            'sinta_score3': forms.TextInput(attrs={'readonly': 'readonly', 'class': 'form-control', 'disabled': 'disabled'}),
         }
 
 class ProgramStudiForm(forms.ModelForm):
@@ -202,8 +223,8 @@ class ProgramStudiForm(forms.ModelForm):
         widgets = {
             'institution': forms.Select(attrs={'class': 'form-select'}),
             # Make sinta_score read-only
-            'sinta_score': forms.TextInput(attrs={'readonly': 'readonly', 'class': 'form-control'}),
-            'sinta_score3': forms.TextInput(attrs={'readonly': 'readonly', 'class': 'form-control'}),
+            'sinta_score': forms.TextInput(attrs={'readonly': 'readonly', 'class': 'form-control', 'disabled': 'disabled'}),
+            'sinta_score3': forms.TextInput(attrs={'readonly': 'readonly', 'class': 'form-control', 'disabled': 'disabled'}),
         }
 
     def __init__(self, *args, **kwargs):

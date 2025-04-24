@@ -26,6 +26,13 @@
     .content-container {
       margin-top: 1rem;
     }
+    .img-square {
+      display: block;         /* so width:100% behaves predictably */
+      width: 100%;            /* fill whatever the parent column is */
+      aspect-ratio: 1 / 1;    /* force 1:1 aspect ratio */
+      object-fit: cover;      /* crop the image to fill */
+      object-position: center;
+    }
   </style>
   {% endblock %}
   

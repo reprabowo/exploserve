@@ -19,8 +19,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY & DEBUG
 # -------------------------------------------------------------------
 SECRET_KEY = 'django-insecure-5h)trgtdp=%(ec!wk99@e=(k5pwiim82q)3k4w#rkkv#yndupe'
-DEBUG = True
-ALLOWED_HOSTS = []
+DEBUG = False
+ALLOWED_HOSTS = ['exploservo.stikomyos.ac.id']
 
 # -------------------------------------------------------------------
 # Application definition
@@ -82,7 +82,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'exploserve_db',  # Your MySQL database name
         'USER': 'root',           # Your MySQL username
-        'PASSWORD': '',           # Replace with your MySQL password
+        'PASSWORD': 'admin@bai#x$5b',           # Replace with your MySQL password
         'HOST': '127.0.0.1',
         'PORT': '3306',
         'OPTIONS': {
@@ -131,7 +131,7 @@ USE_TZ = True
 # Static and Media Files
 # -------------------------------------------------------------------
 STATIC_URL = '/static/'
-
+STATIC_ROOT = BASE_DIR / 'static'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
@@ -155,4 +155,17 @@ AUTHENTICATION_BACKENDS = [
 # -------------------------------------------------------------------
 # Email Configuration (Console Backend for Development)
 # -------------------------------------------------------------------
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+
+# in production, switch to SMTP:
+#EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+#EMAIL_HOST = 'smtp.gmail.com'
+#EMAIL_PORT = 587
+#EMAIL_USE_TLS = True
+# your Gmail address here
+#EMAIL_HOST_USER = 'romanus@stikomyos.ac.id'
+# for accounts with 2‑factor auth you must create an “App Password”:
+#EMAIL_HOST_PASSWORD = '5emperF1d3l15'
+#DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+#EMAIL_PORT = 465
+#EMAIL_USE_SSL = False

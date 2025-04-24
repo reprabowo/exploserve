@@ -147,7 +147,7 @@
       <div class="card h-100 bg-light">
         <div class="card-body">
           <h5 class="card-title">{{ program.nama_program_studi }}</h5>
-          <p class="card-text">
+          <p class="s">
             <strong>Jenjang:</strong> {{ program.jenjang }}<br>
             <strong>Status:</strong> {{ program.status }}<br>
             <strong>Akreditasi:</strong> {{ program.get_akreditasi_ps_display }}<br>
@@ -176,7 +176,7 @@
               {% else %}
                 <img src="https://www.shutterstock.com/image-vector/avatar-gender-neutral-silhouette-vector-600nw-2470054311.jpg" class="card-img-top img-fluid" style="height:175px; object-fit:cover;">
               {% endif %}
-              <div class="card-body d-flex flex-column p-2">
+              <div class="card-body d-flex flex-column">
                 <h6 class="card-title mb-1">{{ researcher.nama_lengkap }}</h6>
                 <p class="card-text small">{% if researcher.gelar_depan %}{{ researcher.gelar_depan }}{% endif %} {% if researcher.gelar_belakang %}{{ researcher.gelar_belakang }}{% endif %}</p>
                 <a href="{% url 'profile_detail' researcher.user.id %}" class="btn btn-sm btn-outline-primary mt-auto w-auto mx-auto">View</a>
@@ -202,10 +202,10 @@
           {% else %}
             <img src="https://www.shutterstock.com/image-vector/avatar-gender-neutral-silhouette-vector-600nw-2470054311.jpg" class="card-img-top img-fluid" style="height:150px; object-fit:cover;">
           {% endif %}
-          <div class="card-body p-2">
+          <div class="card-body d-flex flex-column">
             <h6 class="card-title mb-1">{{ researcher.nama_lengkap }}</h6>
             <p class="card-text small">{% if researcher.gelar_depan %}{{ researcher.gelar_depan }}{% endif %} {% if researcher.gelar_belakang %}{{ researcher.gelar_belakang }}{% endif %}</p>
-            <a href="{% url 'profile_detail' researcher.user.id %}" class="btn btn-sm btn-outline-primary">View</a>
+            <a href="{% url 'profile_detail' researcher.user.id %}" class="btn btn-sm btn-outline-primary mt-auto w-auto mx-auto">View</a>
           </div>
         </div>
       </div>

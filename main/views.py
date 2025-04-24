@@ -1,15 +1,17 @@
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.decorators import login_required, user_passes_test
-from django.contrib.auth import update_session_auth_hash
-from django.http import HttpResponse, HttpResponseForbidden, JsonResponse
-from django.contrib.auth.models import User
-from django.utils.translation import gettext_lazy as _
-from django.db.models import Q
-from django.urls import reverse
-from django.core.paginator import Paginator
 from datetime import datetime
-from .utils import fetch_sinta_scores, fetch_sinta_inst_scores, fetch_sinta_ps_scores
+from django.conf import settings
+from django.contrib.auth import update_session_auth_hash
+from django.contrib.auth.decorators import login_required, user_passes_test
+from django.contrib.auth.models import User
+from django.core.mail import send_mail
+from django.core.paginator import Paginator
+from django.db.models import Q
+from django.http import HttpResponse, HttpResponseForbidden, JsonResponse
+from django.shortcuts import render, redirect, get_object_or_404
+from django.urls import reverse
+from django.utils.translation import gettext_lazy as _
 from .permissions import can_manage_user, can_delete_user
+from .utils import fetch_sinta_scores, fetch_sinta_inst_scores, fetch_sinta_ps_scores
 from .models import (
     Profile,
     Institution,
@@ -43,6 +45,7 @@ def home(request):
 
 
 def dashboard(request):
+    profiles = Profile.objects.all()
     if not request.user.is_authenticated:
         return redirect("login")
     user_inst = request.user.profile.institution
@@ -58,37 +61,76 @@ def dashboard(request):
     context = {
         "announcements": announcements,
     }
-    return render(request, "dashboard.html", context)
+    return render(request, "dashboard.html", {
+        "profiles": profiles,
+        "announcements": announcements,
+    })
 
 
 @login_required
 def profile_detail(request, user_id=None):
+    # 1) pick which user you’re viewing
     if user_id is None:
         user_obj = request.user
     else:
         user_obj = get_object_or_404(User, id=user_id)
+
     profile_obj = get_object_or_404(Profile, user=user_obj)
-    return render(
-        request,
-        "profile_detail.html",
-        {"user_obj": user_obj, "profile_obj": profile_obj},
-    )
+
+    # 2) compute two flags, based on your existing logic
+    can_edit   = can_manage_user(request.user, user_obj)
+    can_delete = can_delete_user(request.user, user_obj)
+
+    # 3) render, passing the flags alongside your existing context
+    return render(request, "profile_detail.html", {
+        "user_obj":    user_obj,
+        "profile_obj": profile_obj,
+        "can_edit":    can_edit,
+        "can_delete":  can_delete,
+    })
 
 
 @login_required
 def edit_profile(request):
+    # Get the target user and associated profile.
     user_obj = request.user
     profile_obj = get_object_or_404(Profile, user=user_obj)
+    
+    # 1. permission check
+    if not can_manage_user(request.user, user_obj):
+        return HttpResponseForbidden("You do not have permission to manage this user.")
+    
+    # Store the original password hash so we can restore it if needed.
+    original_password = user_obj.password
+            
     if request.method == "POST":
-        user_form = UserRegistrationForm(request.POST, instance=user_obj)
-        profile_form = ProfileForm(request.POST, request.FILES, instance=profile_obj)
+        # Make a mutable copy of POST data so we can check the password field.
+        post_data = request.POST.copy()
+        new_password = post_data.get("password", "").strip()
+        
+        # Instantiate the forms with the POST data and the existing instances. 
+        user_form = UserRegistrationForm(post_data, instance=user_obj)
+        profile_form = ProfileForm(
+            request.POST, 
+            request.FILES, 
+            instance=profile_obj,
+            current_user=request.user
+        )
+        
         if user_form.is_valid() and profile_form.is_valid():
+            # 2. save user (with optional password change)
             user = user_form.save(commit=False)
-            if user_form.cleaned_data.get("password"):
-                user.set_password(user_form.cleaned_data["password"])
+            if new_password:
+                user.set_password(new_password)
+            else:
+                user.password = original_password
             user.save()
 
-            # ✅ Prevent role-based tampering with is_reviewer_assigned
+            # make sure session keeps working if they changed their own password
+            if new_password and user == request.user:
+                update_session_auth_hash(request, user)
+                
+            # 3. prevent lower level roles from toggling reviewer flag
             if request.user.profile.role not in [
                 "system_owner",
                 "system_admin",
@@ -98,66 +140,87 @@ def edit_profile(request):
                     "is_reviewer_assigned"
                 ] = profile_obj.is_reviewer_assigned
 
-            profile_form.save()
+            # 4. now process the profile
+            profile = profile_form.save(commit=False)
 
-            # If SINTA ID is provided, fetch and update the SINTA scores.
-            sinta_id = profile_obj.sinta_id
-            if sinta_id:(
-                first_score,
-                second_score,
-                third_score,
-                fourth_score,
-                scraped_name,
-                name_match) = fetch_sinta_scores(
-                    profile_obj.sinta_id,
-                    local_name = profile_obj.nama_lengkap
+            # 5. only scrape and assign SINTA fields if there really is a SINTA ID
+            if profile.sinta_id:
+                (
+                    first_score,
+                    second_score,
+                    third_score,
+                    fourth_score,
+                    scraped_name,
+                    name_match
+                ) = fetch_sinta_scores(
+                    profile.sinta_id,                   # only the person's SINTA ID
+                    local_name=profile.nama_lengkap     # if your function accepts this kwarg
                 )
-            if first_score:
-                profile_obj.sinta_score = first_score
-            if second_score:
-                profile_obj.sinta_score3 = second_score
-            if third_score:
-                profile_obj.sinta_scoresc = third_score
-            if fourth_score:
-                profile_obj.sinta_scorego = fourth_score
+                
+                if first_score is not None:
+                    profile.sinta_score = first_score
+                if second_score is not None:
+                    profile.sinta_score3 = second_score
+                if third_score is not None:
+                    profile.sinta_scoresc = third_score
+                if fourth_score is not None:
+                    profile.sinta_scorego = fourth_score
 
-                # save scraped name & match flag
-                profile_obj.sinta_name_scraped = scraped_name
-                profile_obj.sinta_name_match   = bool(name_match)
+                # always store scraped name & match flag (even if False)
+                profile.sinta_name_scraped = scraped_name or ""
+                profile.sinta_name_match   = bool(name_match)
 
-                profile_obj.save()
+            # 6. finally save profile
+            profile_obj.save()
 
-            update_session_auth_hash(request, user)
             return redirect("profile_detail")
+            
     else:
         user_form = UserRegistrationForm(instance=user_obj)
-        profile_form = ProfileForm(instance=profile_obj)
+        profile_form = ProfileForm(
+            instance=profile_obj,
+            current_user=request.user
+        )
+        
     return render(
-        request,
-        "profile_edit.html",
-        {"user_form": user_form, "profile_form": profile_form},
+        request, 
+        "user_form.html", {
+            "user_form":    user_form,
+            "profile_form": profile_form,
+        }
     )
 
 
 def fetch_sinta_data(request, sinta_id):
-    if request.method == "POST":
-        profile_obj = get_object_or_404(Profile, sinta_id=sinta_id)
-        first_score, second_score, third_score, fourth_score = fetch_sinta_scores(
-            sinta_id
-        )
-        if first_score:
-            profile_obj.sinta_score = first_score
-        if second_score:
-            profile_obj.sinta_score3 = second_score
-        if third_score:
-            profile_obj.sinta_scoresc = third_score
-        if fourth_score:
-            profile_obj.sinta_scorego = fourth_score
-        profile_obj.save()
-
-        return redirect(reverse("profile_detail", args=[profile_obj.user.id]))
-    else:
+    if request.method != "POST":
         return redirect("home")
+
+    profile_obj = get_object_or_404(Profile, sinta_id=sinta_id)
+
+    # unpack six values now
+    first_score, second_score, third_score, fourth_score, sinta_name, name_match = fetch_sinta_scores(
+        sinta_id,
+        local_name=profile_obj.nama_lengkap
+    )
+
+    if first_score is not None:
+        profile_obj.sinta_score = first_score
+    if second_score is not None:
+        profile_obj.sinta_score3 = second_score
+    if third_score is not None:
+        profile_obj.sinta_scoresc = third_score
+    if fourth_score is not None:
+        profile_obj.sinta_scorego = fourth_score
+
+    # always set scraped name & match flag (so you clear it if no match)
+    profile_obj.sinta_name_scraped = sinta_name or ""
+    profile_obj.sinta_name_match   = bool(name_match)
+    
+
+    profile_obj.save()
+
+    # redirect back to your profile detail url
+    return redirect(reverse("profile_detail", args=[profile_obj.user.id]))
 
 
 # ======================================================
@@ -176,7 +239,7 @@ def is_system_owner(user):
 @user_passes_test(
     lambda u: u.is_authenticated
     and u.profile.role in ["system_owner", "system_admin", "institution_admin"]
-)
+    )
 def user_list(request):
     users = User.objects.select_related("profile").all()
 
@@ -228,90 +291,168 @@ def user_list(request):
 def create_user(request):
     if request.method == "POST":
         user_form = UserRegistrationForm(request.POST)
-        # Pass current_user to restrict role choices and fix institution field.
-        profile_form = ProfileForm(request.POST, current_user=request.user)
+        # pass current_user so your ProfileForm __init__ can adjust role/institution fields
+        profile_form = ProfileForm(
+            request.POST,
+            request.FILES,
+            current_user=request.user
+        )
+
         if user_form.is_valid() and profile_form.is_valid():
+            # require a password
             if not user_form.cleaned_data["password"]:
                 user_form.add_error("password", "Password is required.")
-                return render(
-                    request,
-                    "user_form.html",
-                    {"user_form": user_form, "profile_form": profile_form},
-                )
+                return render(request, "user_form.html", {
+                    "user_form": user_form,
+                    "profile_form": profile_form,
+                })
+
+            # save the user
             user = user_form.save(commit=False)
             user.set_password(user_form.cleaned_data["password"])
             user.save()
+
+            # save the profile
             profile = profile_form.save(commit=False)
             profile.user = user
-            # If institutional admin, enforce the institution from current_user.
+
+            # if institution_admin, force the profile's institution to your own
             if request.user.profile.role == "institution_admin":
                 profile.institution = request.user.profile.institution
+
             profile.save()
+
+            # ─── EMAIL SEND ────────────────────────────────────────────────────────
+            # Build a login link
+            login_url = request.build_absolute_uri(
+                reverse("login")
+            )
+            subject = "Welcome to ExploServe!"
+            message = (
+                f"Hello {profile.nama_lengkap},\n\n"
+                "Your account has been created.  You can log in here:\n"
+                f"{login_url}\n\n"
+                "Thank you for joining ExploServe.\n"
+            )
+            send_mail(
+                subject,
+                message,
+                settings.DEFAULT_FROM_EMAIL,
+                [user.email],
+                fail_silently=False,
+            )
+            # ────────────────────────────────────────────────────────────────────────
+
             return redirect("user_list")
+
     else:
         user_form = UserRegistrationForm()
         profile_form = ProfileForm(current_user=request.user)
-    return render(
-        request,
-        "user_form.html",
-        {"user_form": user_form, "profile_form": profile_form},
-    )
+
+    return render(request, "user_form.html", {
+        "user_form": user_form,
+        "profile_form": profile_form,
+    })
 
 
 @login_required
 def update_user(request, user_id):
     # Get the target user and associated profile.
-    user_obj = get_object_or_404(User, id=user_id)
+    user_obj    = get_object_or_404(User, id=user_id)
     profile_obj = get_object_or_404(Profile, user=user_obj)
+
+    # 1. permission check
+    if not can_manage_user(request.user, user_obj):
+        return HttpResponseForbidden("You do not have permission to manage this user.")
 
     # Store the original password hash so we can restore it if needed.
     original_password = user_obj.password
 
-    # Check permission using our custom helper:
-    # This helper should return True if the logged-in user (request.user)
-    # is allowed to manage the target user (user_obj).
-    if not can_manage_user(request.user, user_obj):
-        return HttpResponseForbidden("You do not have permission to manage this user.")
-
     if request.method == "POST":
         # Make a mutable copy of POST data so we can check the password field.
-        post_data = request.POST.copy()
+        post_data    = request.POST.copy()
         new_password = post_data.get("password", "").strip()
 
-        # Instantiate the forms with the POST data and the existing instances.
-        user_form = UserRegistrationForm(post_data, instance=user_obj)
-        profile_form = ProfileForm(request.POST, instance=profile_obj)
+        # Instantiate the forms with the POST data and the existing instances. 
+        user_form    = UserRegistrationForm(post_data, instance=user_obj)
+        profile_form = ProfileForm(
+            request.POST, 
+            request.FILES, 
+            instance=profile_obj,
+            current_user=request.user
+        )
 
         if user_form.is_valid() and profile_form.is_valid():
+            # 2. save user (with optional password change)
             user = user_form.save(commit=False)
             if new_password:
                 user.set_password(new_password)
-                user.save()
-                update_session_auth_hash(request, user)
             else:
                 user.password = original_password
-                user.save()
+            user.save()
 
-            # ✅ Prevent lower roles from tampering with reviewer flag
+            # make sure session keeps working if they changed their own password
+            if new_password and user == request.user:
+                update_session_auth_hash(request, user)
+
+            # 3. prevent lower level roles from toggling reviewer flag
             if request.user.profile.role not in [
-                "system_owner",
-                "system_admin",
-                "institution_admin",
+                "system_owner", 
+                "system_admin", 
+                "institution_admin"
             ]:
                 profile_form.cleaned_data[
                     "is_reviewer_assigned"
                 ] = profile_obj.is_reviewer_assigned
 
-            profile_form.save()
+            # 4. now process the profile
+            profile = profile_form.save(commit=False)
+
+            # 5. only scrape and assign SINTA fields if there really is a SINTA ID
+            if profile.sinta_id:
+                (
+                    first_score,
+                    second_score,
+                    third_score,
+                    fourth_score,
+                    scraped_name,
+                    name_match
+                ) = fetch_sinta_scores(
+                    profile.sinta_id,                   # only the person's SINTA ID
+                    local_name=profile.nama_lengkap     # if your function accepts this kwarg
+                )
+
+                if first_score is not None:
+                    profile.sinta_score = first_score
+                if second_score is not None:
+                    profile.sinta_score3 = second_score
+                if third_score is not None:
+                    profile.sinta_scoresc = third_score
+                if fourth_score is not None:
+                    profile.sinta_scorego = fourth_score
+
+                # always store scraped name & match flag (even if False)
+                profile.sinta_name_scraped = scraped_name or ""
+                profile.sinta_name_match   = bool(name_match)
+
+            # 6. finally save profile
+            profile.save()
+
             return redirect("user_list")
+
     else:
-        user_form = UserRegistrationForm(instance=user_obj)
-        profile_form = ProfileForm(instance=profile_obj)
+        user_form    = UserRegistrationForm(instance=user_obj)
+        profile_form = ProfileForm(
+            instance=profile_obj,
+            current_user=request.user
+        )
 
     return render(
-        request,
-        "user_form.html",
-        {"user_form": user_form, "profile_form": profile_form},
+        request, 
+        "user_form.html", {
+            "user_form":    user_form,
+            "profile_form": profile_form,
+        }
     )
 
 
@@ -1222,3 +1363,4 @@ def ajax_load_programs(request):
         for p in qs
     ]
     return JsonResponse(data, safe=False)
+

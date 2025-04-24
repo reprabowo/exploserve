@@ -16,6 +16,7 @@
       <table class="table table-striped">
           <thead>
               <tr>
+                  <th>Photo</th>
                   <th>User</th>
                   <th>Role</th>
                   <th>Actions</th>
@@ -24,6 +25,19 @@
           <tbody>
               {% for user in users %}
               <tr>
+                  <td class="col-4 col-md-2 col-lg-1 mb-3">
+                    {% if user.profile.profile_photo %}
+                    <img
+                      src="{{ user.profile.profile_photo.url }}"
+                      alt="{{ user.profile.nama_lengkap }} Photo"
+                      class="img-thumbnail img-square"> 
+                    {% else %}
+                      <img
+                      src="https://www.shutterstock.com/image-vector/avatar-gender-neutral-silhouette-vector-600nw-2470054311.jpg"
+                      alt="No Photo"
+                      class="img-thumbnail img-square">
+                    {% endif %}
+                  </td>
                   <td>
                     <strong>{{ user.profile.nama_lengkap }}</strong><br>
                     <small>{{ user.email }}</small></td>
