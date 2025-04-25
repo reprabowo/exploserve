@@ -82,7 +82,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'exploserve_db',  # Your MySQL database name
         'USER': 'exploserve_user',           # Your MySQL username
-        'PASSWORD': 'admin@bai#x$5b',           # Replace with your MySQL password
+        'PASSWORD': '',           # Replace with your MySQL password
         'HOST': 'localhost',  # Set to 'localhost' or your database server IP
         'PORT': '3306',
         'OPTIONS': {
@@ -163,9 +163,10 @@ EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 #EMAIL_PORT = 587
 #EMAIL_USE_TLS = True
 # your Gmail address here
-#EMAIL_HOST_USER = 'romanus@stikomyos.ac.id'
+#EMAIL_HOST_USER = ''
 # for accounts with 2‑factor auth you must create an “App Password”:
-#EMAIL_HOST_PASSWORD = '5emperF1d3l15'
+#EMAIL_HOST_PASSWORD = ''
 #DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 #EMAIL_PORT = 465
 #EMAIL_USE_SSL = False
+
